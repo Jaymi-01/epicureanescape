@@ -36,14 +36,80 @@ import {
   Clock,
   UtensilsCrossed
 } from "lucide-react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+
+interface Reservation {
+  id: string
+  name: string
+  email: string
+  date: string
+  time: string
+  guests: string
+  requests: string
+  status?: string
+  createdAt: string
+}
+
+interface Subscriber {
+  id: string
+  email: string
+  createdAt: string
+}
+
+// Shared Navigation Content
+const NavContent = ({ activeTab, setActiveTab, handleLogout }: { 
+  activeTab: string, 
+  setActiveTab: (tab: string) => void, 
+  handleLogout: () => void 
+}) => (
+  <>
+    <div className="p-6 border-b border-white/10">
+      <h2 className="text-xl font-serif tracking-wider">TIARA ADMIN</h2>
+    </div>
+    <nav className="flex-1 p-4 space-y-2">
+      <Button 
+        variant="ghost" 
+        className={`w-full justify-start gap-3 hover:bg-white/10 hover:text-white ${activeTab === "reservations" ? "bg-white/10 text-white" : "text-white/60"}`}
+        onClick={() => setActiveTab("reservations")}
+      >
+        <CalendarDays size={20} />
+        Reservations
+      </Button>
+      <Button 
+        variant="ghost" 
+        className={`w-full justify-start gap-3 hover:bg-white/10 hover:text-white ${activeTab === "subscribers" ? "bg-white/10 text-white" : "text-white/60"}`}
+        onClick={() => setActiveTab("subscribers")}
+      >
+        <Users size={20} />
+        Subscribers
+      </Button>
+      <div className="pt-4 mt-4 border-t border-white/10">
+        <Link href="/" target="_blank">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-white/60 hover:text-white hover:bg-white/10">
+            <ArrowUpRight size={20} />
+            View Live Site
+          </Button>
+        </Link>
+      </div>
+    </nav>
+    <div className="p-4 border-t border-white/10">
+      <Button 
+        variant="destructive" 
+        className="w-full gap-2 bg-red-900/50 hover:bg-red-900"
+        onClick={handleLogout}
+      >
+        <LogOut size={16} /> Logout
+      </Button>
+    </div>
+  </>
+)
 
 export default function AdminDashboard() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("reservations")
-  const [reservations, setReservations] = useState<any[]>([])
-  const [subscribers, setSubscribers] = useState<any[]>([])
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [loading, setLoading] = useState(true)
 
   // Check Auth on Mount
   useEffect(() => {
@@ -56,23 +122,22 @@ export default function AdminDashboard() {
     // Listen to Reservations
     const qReservations = query(collection(db, "reservations"), orderBy("createdAt", "desc"))
     const unsubscribeRes = onSnapshot(qReservations, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reservation))
       setReservations(data)
     })
 
     // Listen to Subscribers
     const qSubscribers = query(collection(db, "subscribers"), orderBy("createdAt", "desc"))
     const unsubscribeSub = onSnapshot(qSubscribers, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subscriber))
       setSubscribers(data)
-      setLoading(false)
     })
 
     return () => {
       unsubscribeRes()
       unsubscribeSub()
     }
-  }, [])
+  }, [router])
 
   const handleLogout = () => {
     document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;"
@@ -114,56 +179,47 @@ export default function AdminDashboard() {
     sub.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Shared Navigation Content
-  const NavContent = () => (
-    <>
-      <div className="p-6 border-b border-white/10">
-        <h2 className="text-xl font-serif tracking-wider">TIARA ADMIN</h2>
-      </div>
-      <nav className="flex-1 p-4 space-y-2">
-        <Button 
-          variant="ghost" 
-          className={`w-full justify-start gap-3 hover:bg-white/10 hover:text-white ${activeTab === "reservations" ? "bg-white/10 text-white" : "text-white/60"}`}
-          onClick={() => setActiveTab("reservations")}
-        >
-          <CalendarDays size={20} />
-          Reservations
-        </Button>
-        <Button 
-          variant="ghost" 
-          className={`w-full justify-start gap-3 hover:bg-white/10 hover:text-white ${activeTab === "subscribers" ? "bg-white/10 text-white" : "text-white/60"}`}
-          onClick={() => setActiveTab("subscribers")}
-        >
-          <Users size={20} />
-          Subscribers
-        </Button>
-        <div className="pt-4 mt-4 border-t border-white/10">
-          <Link href="/" target="_blank">
-            <Button variant="ghost" className="w-full justify-start gap-3 text-white/60 hover:text-white hover:bg-white/10">
-              <ArrowUpRight size={20} />
-              View Live Site
-            </Button>
-          </Link>
-        </div>
-      </nav>
-      <div className="p-4 border-t border-white/10">
-        <Button 
-          variant="destructive" 
-          className="w-full gap-2 bg-red-900/50 hover:bg-red-900"
-          onClick={handleLogout}
-        >
-          <LogOut size={16} /> Logout
-        </Button>
-      </div>
-    </>
-  )
+  // Process data for chart
+  const processChartData = () => {
+    if (reservations.length === 0) {
+      // Return placeholder data if empty so chart is visible during dev
+      return [
+        { name: "Mon", total: 0 },
+        { name: "Tue", total: 0 },
+        { name: "Wed", total: 0 },
+        { name: "Thu", total: 0 },
+        { name: "Fri", total: 0 },
+        { name: "Sat", total: 0 },
+        { name: "Sun", total: 0 },
+      ]
+    }
+
+    const dayMap = new Map<string, number>()
+    reservations.forEach(curr => {
+      if (!curr.date) return
+      // Use short weekday name
+      const date = new Date(curr.date).toLocaleDateString('en-US', { weekday: 'short' })
+      dayMap.set(date, (dayMap.get(date) || 0) + 1)
+    })
+
+    // Convert map to array and ensure basic sorting order if possible, or just return entries
+    // For a simple view, we just return the days that have data
+    const data = Array.from(dayMap, ([name, total]) => ({ name, total }))
+    return data.length > 0 ? data : [{ name: "No Data", total: 0 }]
+  }
+
+  const chartData = processChartData()
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
       
       {/* Desktop Sidebar */}
       <aside className="w-64 bg-foreground text-background hidden md:flex flex-col border-r border-border/10 fixed h-full z-10">
-        <NavContent />
+        <NavContent 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          handleLogout={handleLogout} 
+        />
       </aside>
 
       {/* Main Content */}
@@ -178,7 +234,11 @@ export default function AdminDashboard() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-64 bg-foreground text-background border-r border-border/10">
-                <NavContent />
+                <NavContent 
+                  activeTab={activeTab} 
+                  setActiveTab={setActiveTab} 
+                  handleLogout={handleLogout} 
+                />
               </SheetContent>
             </Sheet>
             
@@ -243,7 +303,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Dynamic Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
           <div className="p-4 md:p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h3 className="font-serif text-lg md:text-xl">{activeTab === 'reservations' ? 'Recent Reservations' : 'Subscriber List'}</h3>
@@ -257,13 +317,13 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader className="bg-gray-50/50">
                   <TableRow>
-                    <TableHead className="w-[120px]">Status</TableHead>
+                    <TableHead className="w-30">Status</TableHead>
                     <TableHead>Guest Name</TableHead>
                     <TableHead>Reservation Date</TableHead>
                     <TableHead>Party Size</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Requests</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="w-12.5"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -352,6 +412,41 @@ export default function AdminDashboard() {
                 </TableBody>
               </Table>
             )}
+          </div>
+        </div>
+
+        {/* Analytics Graph */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="font-serif text-lg mb-4">Weekly Booking Trends</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#888888" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                />
+                <YAxis 
+                  stroke="#888888" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tickFormatter={(value) => `${value}`} 
+                />
+                <Tooltip 
+                  cursor={{ fill: 'transparent' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar 
+                  dataKey="total" 
+                  fill="#741213" 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={40}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </main>
