@@ -104,6 +104,19 @@ const NavContent = ({ activeTab, setActiveTab, handleLogout }: {
   </>
 )
 
+const StatusBadge = ({ status }: { status?: string }) => {
+  switch (status) {
+    case 'Seated':
+      return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">Seated</Badge>
+    case 'Completed':
+      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Completed</Badge>
+    case 'Cancelled':
+      return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200">Cancelled</Badge>
+    default:
+      return <Badge className="bg-primary/10 text-primary border-primary/20 shadow-none hover:bg-primary/20">Confirmed</Badge>
+  }
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("reservations")
@@ -254,7 +267,7 @@ export default function AdminDashboard() {
                 <input 
                   type="text" 
                   placeholder="Search..." 
-                  className="bg-transparent outline-none w-full md:min-w-[200px]"
+                  className="bg-transparent outline-none w-full md:min-w-50"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -337,7 +350,7 @@ export default function AdminDashboard() {
                     filteredReservations.map((res) => (
                       <TableRow key={res.id} className="hover:bg-gray-50/50 transition-colors">
                         <TableCell>
-                          {getStatusBadge(res.status)}
+                          <StatusBadge status={res.status} />
                         </TableCell>
                         <TableCell className="font-medium font-serif text-base">{res.name}</TableCell>
                         <TableCell>
@@ -348,7 +361,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{res.guests} Guests</TableCell>
                         <TableCell className="text-muted-foreground">{res.email}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-sm italic text-muted-foreground">
+                        <TableCell className="max-w-50 truncate text-sm italic text-muted-foreground">
                           {res.requests || "None"}
                         </TableCell>
                         <TableCell>
