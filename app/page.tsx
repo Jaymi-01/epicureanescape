@@ -14,7 +14,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen">
       {/* Navigation */}
       <nav className="bg-foreground text-background py-4 px-6 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
            <Image 
             src="/eet-logo.jpg" 
             alt="Logo" 
@@ -23,11 +23,11 @@ export default function LandingPage() {
             className="rounded-full"
           />
           <span className="font-serif text-sm sm:text-xl tracking-wider uppercase">Epicurean Escape <span className="text-primary italic">by Tiara</span></span>
-        </div>
+        </Link>
         <div className="hidden md:flex gap-8 font-sans text-sm uppercase tracking-widest">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <Link href="#about" className="hover:text-primary transition-colors">About</Link>
-          <Link href="/reserve" className="hover:text-primary transition-colors">Reservations</Link>
+          <Link href="/#about" className="hover:text-primary transition-colors">Philosophy</Link>
+          <Link href="/menu" className="hover:text-primary transition-colors">Menu</Link>
+          <Link href="#contact" className="hover:text-primary transition-colors">Contact</Link>
         </div>
         <Link href="/reserve">
           <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white font-serif">
@@ -141,7 +141,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-foreground text-background py-16 px-6">
+      <footer id="contact" className="bg-foreground text-background py-16 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
           <div className="space-y-4">
             <h3 className="font-serif text-2xl tracking-widest text-primary uppercase">Epicurean Escape by Tiara</h3>
