@@ -46,13 +46,13 @@ const formSchema = z.object({
     message: "Please enter a valid email address.",
   }),
   date: z.date({
-    required_error: "A date of reservation is required.",
+    message: "A date of reservation is required.",
   }),
   time: z.string({
-    required_error: "Please select a time.",
+    message: "Please select a time.",
   }),
   guests: z.string({
-    required_error: "Please select number of guests.",
+    message: "Please select number of guests.",
   }),
   requests: z.string().optional(),
 })
@@ -60,6 +60,7 @@ const formSchema = z.object({
 export function ReservationForm() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -157,7 +158,7 @@ export function ReservationForm() {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Date</FormLabel>
-                    <Popover>
+                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -180,7 +181,10 @@ export function ReservationForm() {
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date)
+                            setCalendarOpen(false)
+                          }}
                           disabled={(date) =>
                             date < getDateWithoutTime(new Date())
                           }

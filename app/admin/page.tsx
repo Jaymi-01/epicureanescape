@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import {
@@ -24,14 +25,21 @@ import {
 } from "lucide-react"
 
 export default function AdminDashboard() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("reservations")
   const [reservations, setReservations] = useState<any[]>([])
   const [subscribers, setSubscribers] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
 
-  // Fetch Data Real-time
+  // Check Auth on Mount
   useEffect(() => {
+    const hasToken = document.cookie.split('; ').find(row => row.startsWith('auth-token='))
+    if (!hasToken) {
+      router.push("/login")
+      return
+    }
+
     // Listen to Reservations
     const qReservations = query(collection(db, "reservations"), orderBy("createdAt", "desc"))
     const unsubscribeRes = onSnapshot(qReservations, (snapshot) => {
