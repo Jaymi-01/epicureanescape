@@ -9,7 +9,7 @@ const schema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
 })
 
-export async function subscribeToNewsletter(prevState: any, formData: FormData) {
+export async function subscribeToNewsletter(prevState: { message: string, success: boolean }, formData: FormData) {
   const email = formData.get('email')
 
   const validatedFields = schema.safeParse({
@@ -43,7 +43,14 @@ export async function subscribeToNewsletter(prevState: any, formData: FormData) 
   }
 }
 
-export async function saveReservation(data: any) {
+export async function saveReservation(data: {
+  name: string
+  email: string
+  date: Date
+  time: string
+  guests: string
+  requests?: string
+}) {
   try {
     // Save to Firebase Firestore 'reservations' collection
     await addDoc(collection(db, "reservations"), {
