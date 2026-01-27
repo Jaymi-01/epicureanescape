@@ -86,7 +86,9 @@ export function ReservationForm() {
           </div>
           <CardTitle className="text-3xl font-serif">Reservation Confirmed</CardTitle>
           <CardDescription className="text-lg">
-            Thank you for choosing Epicurean Escape by Tiara. A confirmation email will be sent to you shortly.
+            Thank you for choosing Epicurean Escape by Tiara. 
+            <br /><br />
+            <span className="font-semibold text-primary">Check your email!</span> We've sent you the exclusive menu and price list.
           </CardDescription>
           <Button asChild className="mt-4">
             <Link href="/">Return Home</Link>
