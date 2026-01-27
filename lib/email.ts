@@ -1,16 +1,21 @@
 import nodemailer from 'nodemailer';
 
 // Configure the transporter
-// You will need to add EMAIL_USER and EMAIL_PASS to your .env.local file
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // You can change this to 'outlook', 'yahoo', etc.
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // For Gmail, this MUST be an App Password
+    pass: process.env.EMAIL_PASS,
   },
 });
 
 export async function sendMenuEmail(toEmail: string, guestName: string) {
+  console.log("Attempting to send email...");
+  console.log("User:", process.env.EMAIL_USER ? "Set" : "Missing");
+  console.log("Pass:", process.env.EMAIL_PASS ? "Set" : "Missing");
+
   const mailOptions = {
     from: `"Epicurean Escape" <${process.env.EMAIL_USER}>`,
     to: toEmail,

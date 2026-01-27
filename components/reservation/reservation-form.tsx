@@ -3,7 +3,7 @@
 import * as z from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CalendarIcon, Users, Clock, Utensils } from "lucide-react"
+import { CalendarIcon, Users, Clock, Utensils, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import Image from "next/image"
 import Link from "next/link"
@@ -59,6 +59,7 @@ const formSchema = z.object({
 
 export function ReservationForm() {
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -69,7 +70,9 @@ export function ReservationForm() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true)
     const result = await saveReservation(values)
+    setIsLoading(false)
     if (result.success) {
       setIsSubmitted(true)
     } else {
@@ -255,8 +258,19 @@ export function ReservationForm() {
               )}
             />
 
-            <Button type="submit" className="w-full h-12 text-lg font-serif bg-primary hover:bg-primary/90 text-primary-foreground transition-all">
-              Complete Reservation
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full h-12 text-lg font-serif bg-primary hover:bg-primary/90 text-primary-foreground transition-all flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Complete Reservation"
+              )}
             </Button>
           </form>
         </Form>
