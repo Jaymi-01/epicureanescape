@@ -16,7 +16,7 @@ export default function LandingPage() {
             height={40} 
             className="rounded-full"
           />
-          <span className="font-serif text-xl tracking-wider uppercase">Epicurean Escape <span className="text-primary italic">by Tiara</span></span>
+          <span className="font-serif text-sm sm:text-xl tracking-wider uppercase">Epicurean Escape <span className="text-primary italic">by Tiara</span></span>
         </div>
         <div className="hidden md:flex gap-8 font-sans text-sm uppercase tracking-widest">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
@@ -50,7 +50,7 @@ export default function LandingPage() {
               </Button>
             </Link>
             <Link href="/menu">
-              <Button size="lg" variant="outline" className="text-background border-background hover:bg-background hover:text-foreground px-8 py-6 text-lg font-serif">
+              <Button size="lg" variant="outline" className="text-black/60 border-white/30 hover:bg-background hover:text-foreground hover:border-background px-8 py-6 text-lg font-serif transition-all">
                 View the Menu
               </Button>
             </Link>
@@ -71,7 +71,7 @@ export default function LandingPage() {
               <div className="flex gap-3">
                 <Utensils className="text-border" />
                 <div>
-                  <h4 className="font-serif font-bold">Chef's Table</h4>
+                  <h4 className="font-serif font-bold">Chef&apos;s Table</h4>
                   <p className="text-sm">Curated seasonal menus</p>
                 </div>
               </div>
