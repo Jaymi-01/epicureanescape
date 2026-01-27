@@ -17,7 +17,7 @@ export default function MenuPage() {
             height={40} 
             className="rounded-full"
           />
-          <span className="font-serif text-xl tracking-wider uppercase">Epicurean Escape <span className="text-primary italic">by Tiara</span></span>
+          <span className="font-serif text-sm sm:text-xl tracking-wider uppercase">Epicurean Escape <span className="text-primary italic">by Tiara</span></span>
         </div>
         <div className="hidden md:flex gap-8 font-sans text-sm uppercase tracking-widest">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
