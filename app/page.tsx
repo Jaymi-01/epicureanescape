@@ -158,8 +158,8 @@ export default function LandingPage() {
             <h4 className="font-serif text-lg">Stay Informed</h4>
             <p className="text-sm opacity-70">Sign up for our seasonal menu updates.</p>
             <div className="flex gap-2">
-              <input type="email" placeholder="Email" className="bg-white/10 border border-white/20 px-4 py-2 rounded flex-1 outline-none focus:border-primary" />
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">Join</Button>
+              <input type="email" placeholder="Email" className="bg-white/10 border border-white/20 px-4 py-2 rounded flex-1 outline-none focus:border-primary text-sm" />
+              <Button className="bg-primary hover:bg-primary/90 text-white px-6 py-2 h-auto text-sm">Join</Button>
             </div>
           </div>
         </div>
