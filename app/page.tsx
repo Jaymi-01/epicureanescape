@@ -150,8 +150,8 @@ export default function LandingPage() {
           <div className="space-y-4">
             <h4 className="font-serif text-lg">Contact & Location</h4>
             <div className="space-y-2 text-sm opacity-70">
-              <p className="flex items-center gap-2"><MapPin size={16} /> 123 Gastronomy Lane, Fine City</p>
-              <p className="flex items-center gap-2"><Clock size={16} /> Tue - Sun: 5:00 PM - 11:00 PM</p>
+              <p className="flex items-center gap-2"><MapPin size={16} /> 1A,Arowolo Street,Beside Top Taste Butter Bread,Abule Egba,Lagos.</p>
+              <p className="flex items-center gap-2"><Clock size={16} /> Mon - Sun: 10:00 AM - 11:00 PM</p>
             </div>
           </div>
           <div className="space-y-4">
