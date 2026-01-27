@@ -2,6 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Utensils, Calendar, MapPin, Clock } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 export default function LandingPage() {
   return (
@@ -87,6 +93,50 @@ export default function LandingPage() {
           <div className="relative h-[500px] rounded-lg overflow-hidden shadow-2xl border-4 border-border">
              <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
           </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-24 px-6 bg-background">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl font-serif text-foreground">Frequently Asked Questions</h2>
+            <div className="w-20 h-1 bg-primary mx-auto"></div>
+            <p className="text-muted-foreground font-sans">Everything you need to know before your visit.</p>
+          </div>
+          
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger className="font-serif text-lg">How do reservations work?</AccordionTrigger>
+              <AccordionContent className="font-sans text-muted-foreground leading-relaxed">
+                Reservations are mandatory for entry. We release tables 30 days in advance. To maintain our intimate atmosphere, we require a deposit of $50 per person upon booking, which is applied to your final bill.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <AccordionTrigger className="font-serif text-lg">What type of cuisine do you serve?</AccordionTrigger>
+              <AccordionContent className="font-sans text-muted-foreground leading-relaxed">
+                Our cuisine is a sophisticated fusion of global techniques with a distinct homage to Nigerian heritage. We focus on elevating traditional flavors through modern culinary artistry, using only the finest seasonal ingredients.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
+              <AccordionTrigger className="font-serif text-lg">Can you accommodate dietary restrictions?</AccordionTrigger>
+              <AccordionContent className="font-sans text-muted-foreground leading-relaxed">
+                Absolutely. When making your reservation, please detail any allergies or dietary requirements in the "Special Requests" field. Our culinary team is adept at crafting bespoke modifications for vegetarian, gluten-free, and other specific diets.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4">
+              <AccordionTrigger className="font-serif text-lg">Is there a dress code?</AccordionTrigger>
+              <AccordionContent className="font-sans text-muted-foreground leading-relaxed">
+                We encourage "Smart Elegance." Gentlemen are requested to wear jackets or collared shirts. Athletic wear, shorts, and flip-flops are not permitted in the dining room to preserve the ambiance for all guests.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-5">
+              <AccordionTrigger className="font-serif text-lg">Do you offer private dining?</AccordionTrigger>
+              <AccordionContent className="font-sans text-muted-foreground leading-relaxed">
+                Yes, we have an exclusive private dining room that seats up to 12 guests. For private event inquiries and larger parties, please contact our concierge directly via email.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
 
