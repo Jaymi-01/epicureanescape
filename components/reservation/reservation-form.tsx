@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { CalendarIcon, Users, Clock, Utensils } from "lucide-react"
 import { format } from "date-fns"
 import Image from "next/image"
+import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -33,6 +34,9 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { saveReservation } from "@/app/actions"
+import { useState } from "react"
+import { CheckCircle2 } from "lucide-react"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -54,6 +58,7 @@ const formSchema = z.object({
 })
 
 export function ReservationForm() {
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -63,10 +68,32 @@ export function ReservationForm() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    // Handle submission logic here
-    alert("Reservation requested! We will contact you soon.")
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const result = await saveReservation(values)
+    if (result.success) {
+      setIsSubmitted(true)
+    } else {
+      alert("Something went wrong. Please try again.")
+    }
+  }
+
+  if (isSubmitted) {
+    return (
+      <Card className="w-full max-w-md mx-auto border-2 shadow-xl bg-card text-center py-12">
+        <CardContent className="space-y-6">
+          <div className="flex justify-center">
+            <CheckCircle2 className="h-16 w-16 text-primary animate-bounce" />
+          </div>
+          <CardTitle className="text-3xl font-serif">Reservation Confirmed</CardTitle>
+          <CardDescription className="text-lg">
+            Thank you for choosing Epicurean Escape by Tiara. A confirmation email will be sent to you shortly.
+          </CardDescription>
+          <Button asChild className="mt-4">
+            <Link href="/">Return Home</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -150,7 +177,7 @@ export function ReservationForm() {
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) =>
-                            date < new ReservationForm.getDateWithoutTime(new Date())
+                            date < getDateWithoutTime(new Date())
                           }
                           initialFocus
                         />
@@ -174,7 +201,11 @@ export function ReservationForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {["17:00", "18:00", "19:00", "20:00", "21:00", "22:00"].map((t) => (
+                        {[
+                          "10:00", "11:00", "12:00", "13:00", "14:00", 
+                          "15:00", "16:00", "17:00", "18:00", "19:00", 
+                          "20:00", "21:00", "22:00"
+                        ].map((t) => (
                           <SelectItem key={t} value={t}>{t}</SelectItem>
                         ))}
                       </SelectContent>
@@ -232,7 +263,7 @@ export function ReservationForm() {
   )
 }
 
-ReservationForm.getDateWithoutTime = (date: Date) => {
+function getDateWithoutTime(date: Date) {
   const d = new Date(date)
   d.setHours(0, 0, 0, 0)
   return d
