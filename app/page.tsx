@@ -1,65 +1,122 @@
+import Link from "next/link";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Utensils, Calendar, MapPin, Clock } from "lucide-react";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col min-h-screen">
+      {/* Navigation */}
+      <nav className="bg-foreground text-background py-4 px-6 flex justify-between items-center sticky top-0 z-50">
+        <div className="flex items-center gap-2">
+           <Image 
+            src="/eet-logo.jpg" 
+            alt="Logo" 
+            width={40} 
+            height={40} 
+            className="rounded-full"
+          />
+          <span className="font-serif text-xl tracking-wider uppercase">Epicurean Escape <span className="text-primary italic">by Tiara</span></span>
+        </div>
+        <div className="hidden md:flex gap-8 font-sans text-sm uppercase tracking-widest">
+          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+          <Link href="#about" className="hover:text-primary transition-colors">About</Link>
+          <Link href="/reserve" className="hover:text-primary transition-colors">Reservations</Link>
+        </div>
+        <Link href="/reserve">
+          <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white font-serif">
+            Book a Table
+          </Button>
+        </Link>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-foreground">
+        <div className="absolute inset-0 opacity-40">
+           {/* Placeholder for a high-end restaurant image */}
+           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+        </div>
+        <div className="relative z-10 text-center px-4 max-w-4xl">
+          <h1 className="text-5xl md:text-7xl font-serif text-background mb-6 leading-tight">
+            An Exclusive <span className="text-primary italic">Culinary</span> Journey
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl md:text-2xl font-sans text-background/90 mb-10 max-w-2xl mx-auto">
+            Experience the art of fine dining at <span className="italic font-serif">Epicurean Escape by Tiara</span>. Entry is granted exclusively to those with a confirmed reservation.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/reserve">
+              <Button size="lg" className="bg-primary text-white hover:bg-primary/90 px-8 py-6 text-lg font-serif">
+                Make a Reservation
+              </Button>
+            </Link>
+            <Link href="/menu">
+              <Button size="lg" variant="outline" className="text-background border-background hover:bg-background hover:text-foreground px-8 py-6 text-lg font-serif">
+                View the Menu
+              </Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Philosophy / About Section */}
+      <section id="about" className="py-24 px-6 bg-secondary">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+          <div className="space-y-6">
+            <h2 className="text-4xl font-serif text-foreground">The Philosophy</h2>
+            <div className="w-20 h-1 bg-primary"></div>
+            <p className="text-lg leading-relaxed text-foreground/80 font-sans">
+              At Epicurean Escape, we believe that dining is not just about the food, but the atmosphere, the intimacy, and the anticipation. By operating on a reservation-only basis, we ensure that every guest receives our undivided attention and a perfectly curated experience.
+            </p>
+            <div className="grid grid-cols-2 gap-8 pt-4">
+              <div className="flex gap-3">
+                <Utensils className="text-border" />
+                <div>
+                  <h4 className="font-serif font-bold">Chef's Table</h4>
+                  <p className="text-sm">Curated seasonal menus</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Calendar className="text-border" />
+                <div>
+                  <h4 className="font-serif font-bold">Exclusive</h4>
+                  <p className="text-sm">Limited daily seating</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="relative h-[500px] rounded-lg overflow-hidden shadow-2xl border-4 border-border">
+             <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-foreground text-background py-16 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
+          <div className="space-y-4">
+            <h3 className="font-serif text-2xl tracking-widest text-primary uppercase">Epicurean Escape by Tiara</h3>
+            <p className="text-sm opacity-70">A sanctuary for the senses. Where flavor meets finesse in an atmosphere of unparalleled elegance.</p>
+          </div>
+          <div className="space-y-4">
+            <h4 className="font-serif text-lg">Contact & Location</h4>
+            <div className="space-y-2 text-sm opacity-70">
+              <p className="flex items-center gap-2"><MapPin size={16} /> 123 Gastronomy Lane, Fine City</p>
+              <p className="flex items-center gap-2"><Clock size={16} /> Tue - Sun: 5:00 PM - 11:00 PM</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <h4 className="font-serif text-lg">Stay Informed</h4>
+            <p className="text-sm opacity-70">Sign up for our seasonal menu updates.</p>
+            <div className="flex gap-2">
+              <input type="email" placeholder="Email" className="bg-white/10 border border-white/20 px-4 py-2 rounded flex-1 outline-none focus:border-primary" />
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">Join</Button>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-white/10 text-center text-xs opacity-50 uppercase tracking-widest">
+          &copy; 2026 Epicurean Escape. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 }
