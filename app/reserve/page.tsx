@@ -20,7 +20,7 @@ export default function ReservePage() {
       </main>
 
       <footer className="mt-12 text-center text-foreground/50 font-sans text-sm">
-        <p>&copy; 2026 Epicurean Escape by Tiara. Reservations subject to availability.</p>
+        <p>&copy; {new Date().getFullYear()} Epicurean Escape by Tiara. Reservations subject to availability.</p>
       </footer>
     </div>
   );

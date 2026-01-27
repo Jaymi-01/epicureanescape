@@ -66,7 +66,7 @@ export default function LandingPage() {
 
       {/* Philosophy / About Section */}
       <section id="about" className="py-24 px-6 bg-secondary">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
           <div className="space-y-6">
             <h2 className="text-4xl font-serif text-foreground">The Philosophy</h2>
             <div className="w-20 h-1 bg-primary"></div>
@@ -98,12 +98,13 @@ export default function LandingPage() {
 
       {/* FAQ Section */}
       <section className="py-24 px-6 bg-background">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="text-center space-y-4">
-            <h2 className="text-4xl font-serif text-foreground">Frequently Asked Questions</h2>
-            <div className="w-20 h-1 bg-primary mx-auto"></div>
-            <p className="text-muted-foreground font-sans">Everything you need to know before your visit.</p>
-          </div>
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl font-serif text-foreground">Frequently Asked Questions</h2>
+              <div className="w-20 h-1 bg-primary mx-auto"></div>
+              <p className="text-muted-foreground font-sans">Everything you need to know before your visit.</p>
+            </div>
           
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
@@ -138,11 +139,12 @@ export default function LandingPage() {
             </AccordionItem>
           </Accordion>
         </div>
+      </div>
       </section>
 
       {/* Footer */}
       <footer id="contact" className="bg-foreground text-background py-16 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
           <div className="space-y-4">
             <h3 className="font-serif text-2xl tracking-widest text-primary uppercase">Epicurean Escape by Tiara</h3>
             <p className="text-sm opacity-70">A sanctuary for the senses. Where flavor meets finesse in an atmosphere of unparalleled elegance.</p>
@@ -164,7 +166,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-white/10 text-center text-xs opacity-50 uppercase tracking-widest">
-          &copy; 2026 Epicurean Escape. All rights reserved.
+          &copy; {new Date().getFullYear()} Epicurean Escape. All rights reserved.
         </div>
       </footer>
     </div>

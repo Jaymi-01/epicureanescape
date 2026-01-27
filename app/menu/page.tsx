@@ -157,7 +157,7 @@ export default function MenuPage() {
       
       <footer id="contact" className="bg-foreground text-background py-8 px-6 mt-12">
         <div className="max-w-6xl mx-auto text-center text-xs opacity-50 uppercase tracking-widest">
-          &copy; 2026 Epicurean Escape by Tiara. All rights reserved.
+          &copy; {new Date().getFullYear()} Epicurean Escape by Tiara. All rights reserved.
         </div>
       </footer>
     </div>
