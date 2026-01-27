@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Utensils, Calendar, MapPin, Clock } from "lucide-react";
+import { NewsletterForm } from "@/components/newsletter-form";
 import {
   Accordion,
   AccordionContent,
@@ -159,10 +160,7 @@ export default function LandingPage() {
           <div className="space-y-4">
             <h4 className="font-serif text-lg">Stay Informed</h4>
             <p className="text-sm opacity-70">Sign up for our seasonal menu updates.</p>
-            <div className="flex gap-2">
-              <input type="email" placeholder="Email" className="bg-white/10 border border-white/20 px-4 py-2 rounded flex-1 outline-none focus:border-primary text-sm" />
-              <Button className="bg-primary hover:bg-primary/90 text-white px-6 py-2 h-auto text-sm">Join</Button>
-            </div>
+            <NewsletterForm />
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-white/10 text-center text-xs opacity-50 uppercase tracking-widest">
