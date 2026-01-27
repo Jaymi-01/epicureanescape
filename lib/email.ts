@@ -6,8 +6,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAIL_USER || "",
+    pass: process.env.EMAIL_PASS || "",
   },
 });
 
@@ -17,7 +17,7 @@ export async function sendMenuEmail(toEmail: string, guestName: string) {
   console.log("Pass:", process.env.EMAIL_PASS ? "Set" : "Missing");
 
   const mailOptions = {
-    from: `"Epicurean Escape" <${process.env.EMAIL_USER}>`,
+    from: `"Epicurean Escape" <${process.env.EMAIL_USER || ""}>`,
     to: toEmail,
     subject: "Your Exclusive Menu Access | Epicurean Escape by Tiara",
     html: `
