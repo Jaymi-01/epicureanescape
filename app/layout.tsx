@@ -9,6 +9,10 @@ const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });
 export const metadata: Metadata = {
   title: "Epicurean Escape by Tiara",
   description: "An exclusive culinary journey where entry is by reservation only.",
+  icons: {
+    icon: "/eet-logo.jpg",
+    apple: "/eet-logo.jpg",
+  }
 };
 
 export default function RootLayout({
