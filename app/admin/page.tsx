@@ -29,9 +29,11 @@ import {
   XCircle,
   Clock,
   UtensilsCrossed,
-  MessageSquare
+  MessageSquare,
+  Mail
 } from "lucide-react"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { sendThankYou } from "@/app/actions"
 
 interface Reservation {
   id: string
@@ -43,6 +45,7 @@ interface Reservation {
   guests: string
   requests: string
   status?: string
+  thankYouSent?: boolean
   createdAt: string
 }
 
@@ -100,6 +103,13 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error updating status:", error)
       alert("Failed to update status")
+    }
+  }
+
+  const handleSendThankYou = async (id: string, email: string, name: string) => {
+    if (confirm(`Send thank you email to ${name}?`)) {
+      const result = await sendThankYou(id, email, name)
+      if (!result.success) alert("Failed to send email")
     }
   }
 
@@ -279,6 +289,11 @@ export default function AdminDashboard() {
                               <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Cancelled')}>
                                 <XCircle className="mr-2 h-4 w-4 text-red-600" /> Cancelled
                               </DropdownMenuItem>
+                              {res.status === 'Completed' && !res.thankYouSent && (
+                                <DropdownMenuItem onClick={() => handleSendThankYou(res.id, res.email, res.name)}>
+                                  <Mail className="mr-2 h-4 w-4 text-purple-600" /> Send Thank You
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
