@@ -8,6 +8,16 @@ import { db } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Lock } from "lucide-react"
+import { motion, Variants } from "framer-motion"
+
+const fadeInUp: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+}
+
+const stagger: Variants = {
+  visible: { transition: { staggerChildren: 0.1 } }
+}
 
 interface MenuItem {
   id: string
@@ -36,17 +46,28 @@ export default function MenuPage() {
   const desserts = menuItems.filter(i => i.category === "Dessert")
 
   const MenuList = ({ items }: { items: MenuItem[] }) => (
-    <div className="grid md:grid-cols-2 gap-8">
+    <motion.div 
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={stagger}
+      className="grid md:grid-cols-2 gap-8"
+    >
       {items.map((item) => (
-        <div key={item.id} className="space-y-2">
+        <motion.div 
+          key={item.id} 
+          variants={fadeInUp}
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          className="space-y-2 p-4 rounded-lg hover:bg-secondary/30 transition-colors"
+        >
           <div className="flex justify-between items-baseline">
             <h3 className="text-xl font-bold font-serif">{item.name}</h3>
             <span className="text-lg font-serif italic text-primary">₦{item.price}</span>
           </div>
           <p className="text-muted-foreground text-sm font-sans">{item.description}</p>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   )
 
   return (

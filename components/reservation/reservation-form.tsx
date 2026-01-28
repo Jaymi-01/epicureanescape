@@ -7,6 +7,7 @@ import { CalendarIcon, Users, Clock, Utensils, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import Image from "next/image"
 import Link from "next/link"
+import { motion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -83,27 +84,39 @@ export function ReservationForm() {
 
   if (isSubmitted) {
     return (
-      <Card className="w-full max-w-md mx-auto border-2 shadow-xl bg-card text-center py-12">
-        <CardContent className="space-y-6">
-          <div className="flex justify-center">
-            <CheckCircle2 className="h-16 w-16 text-primary animate-bounce" />
-          </div>
-          <CardTitle className="text-3xl font-serif">Reservation Confirmed</CardTitle>
-          <CardDescription className="text-lg">
-            Thank you for choosing Epicurean Escape by Tiara. 
-            <br /><br />
-            <span className="font-semibold text-primary">Check your email!</span> We've sent you the exclusive menu and price list.
-          </CardDescription>
-          <Button asChild className="mt-4">
-            <Link href="/">Return Home</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="w-full max-w-md mx-auto border-2 shadow-xl bg-card text-center py-12">
+          <CardContent className="space-y-6">
+            <div className="flex justify-center">
+              <CheckCircle2 className="h-16 w-16 text-primary animate-bounce" />
+            </div>
+            <CardTitle className="text-3xl font-serif">Reservation Confirmed</CardTitle>
+            <CardDescription className="text-lg">
+              Thank you for choosing Epicurean Escape by Tiara. 
+              <br /><br />
+              <span className="font-semibold text-primary">Check your email!</span> We've sent you the exclusive menu and price list.
+            </CardDescription>
+            <Button asChild className="mt-4">
+              <Link href="/">Return Home</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
     )
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto border-2 shadow-xl bg-card">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="w-full max-w-2xl mx-auto"
+    >
+      <Card className="border-2 shadow-xl bg-card">
       <CardHeader className="text-center space-y-4">
         <div className="flex justify-center mb-2">
           <Image 
@@ -280,6 +293,7 @@ export function ReservationForm() {
         </Form>
       </CardContent>
     </Card>
+    </motion.div>
   )
 }
 
