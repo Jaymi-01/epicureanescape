@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore"
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, increment } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import {
   Table,
@@ -30,7 +30,9 @@ import {
   Clock,
   UtensilsCrossed,
   MessageSquare,
-  Mail
+  Mail,
+  Crown,
+  Star
 } from "lucide-react"
 import { sendThankYou } from "@/app/actions"
 import { toast } from "sonner"
@@ -55,6 +57,13 @@ interface Subscriber {
   createdAt: string
 }
 
+interface Guest {
+  email: string
+  name: string
+  visits: number
+  notes?: string
+}
+
 const StatusBadge = ({ status }: { status?: string }) => {
   switch (status) {
     case 'Seated':
@@ -72,6 +81,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("reservations")
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
+  const [guests, setGuests] = useState<Guest[]>([])
   const [searchTerm, setSearchTerm] = useState("")
 
   // Fetch Data Real-time
@@ -88,18 +98,39 @@ export default function AdminDashboard() {
       setSubscribers(data)
     })
 
+    const qGuests = query(collection(db, "guests"))
+    const unsubscribeGuests = onSnapshot(qGuests, (snapshot) => {
+      const data = snapshot.docs.map(doc => doc.data() as Guest)
+      setGuests(data)
+    })
+
     return () => {
       unsubscribeRes()
       unsubscribeSub()
+      unsubscribeGuests()
     }
   }, [])
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
+  const handleStatusChange = async (id: string, newStatus: string, guestEmail: string) => {
     try {
       const resRef = doc(db, "reservations", id)
       await updateDoc(resRef, {
         status: newStatus
       })
+
+      // CRM: Increment visits if completed
+      if (newStatus === 'Completed') {
+        const guestRef = doc(db, "guests", guestEmail)
+        // Check if guest exists first (legacy data might not have it)
+        const guestSnap = await getDoc(guestRef)
+        if (guestSnap.exists()) {
+          await updateDoc(guestRef, {
+            visits: increment(1),
+            lastVisit: new Date().toISOString()
+          })
+        }
+      }
+
       toast.success(`Status updated to ${newStatus}`)
     } catch (error) {
       console.error("Error updating status:", error)
@@ -241,76 +272,94 @@ export default function AdminDashboard() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredReservations.map((res) => (
-                    <TableRow key={res.id} className="hover:bg-gray-50/50 transition-colors">
-                      <TableCell>
-                        <StatusBadge status={res.status} />
-                      </TableCell>
-                      <TableCell className="font-medium font-serif text-base">{res.name}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{res.date ? new Date(res.date).toLocaleDateString() : "N/A"}</span>
-                          <span className="text-xs text-muted-foreground">{res.time}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{res.guests} Guests</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-sm">
-                          <span>{res.email}</span>
-                          <span className="text-muted-foreground">{res.phone}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-sm italic text-muted-foreground">
-                        {res.requests || "None"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {res.phone && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() => {
-                                if (!res.phone) return
-                                const cleanPhone = formatPhoneForWhatsapp(res.phone)
-                                const msg = encodeURIComponent(`Hello ${res.name}, this is Epicurean Escape. We look forward to welcoming you on ${new Date(res.date).toLocaleDateString()} at ${res.time}. Please confirm your reservation.`)
-                                window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank')
-                              }}
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Confirmed')}>
-                                <CheckCircle2 className="mr-2 h-4 w-4 text-primary" /> Confirmed
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Seated')}>
-                                <UtensilsCrossed className="mr-2 h-4 w-4 text-blue-600" /> Seated
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Completed')}>
-                                <Clock className="mr-2 h-4 w-4 text-green-600" /> Completed
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Cancelled')}>
-                                <XCircle className="mr-2 h-4 w-4 text-red-600" /> Cancelled
-                              </DropdownMenuItem>
-                              {res.status === 'Completed' && !res.thankYouSent && (
-                                <DropdownMenuItem onClick={() => handleSendThankYou(res.id, res.email, res.name)}>
-                                  <Mail className="mr-2 h-4 w-4 text-purple-600" /> Send Thank You
-                                </DropdownMenuItem>
+                    filteredReservations.map((res) => {
+                      const guestProfile = guests.find(g => g.email === res.email)
+                      const isVIP = (guestProfile?.visits || 0) > 3
+
+                      return (
+                        <TableRow key={res.id} className="hover:bg-gray-50/50 transition-colors">
+                          <TableCell>
+                            <StatusBadge status={res.status} />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium font-serif text-base flex items-center gap-2">
+                                {res.name}
+                                {isVIP && <Crown className="h-3 w-3 text-amber-500 fill-amber-500" />}
+                              </span>
+                              {guestProfile && guestProfile.visits > 0 && (
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+                                  <Star className="h-2 w-2" />
+                                  {guestProfile.visits} Visits
+                                </div>
                               )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{res.date ? new Date(res.date).toLocaleDateString() : "N/A"}</span>
+                              <span className="text-xs text-muted-foreground">{res.time}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{res.guests} Guests</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col text-sm">
+                              <span>{res.email}</span>
+                              <span className="text-muted-foreground">{res.phone}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate text-sm italic text-muted-foreground">
+                            {res.requests || "None"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {res.phone && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => {
+                                    if (!res.phone) return
+                                    const cleanPhone = formatPhoneForWhatsapp(res.phone)
+                                    const msg = encodeURIComponent(`Hello ${res.name}, this is Epicurean Escape. We look forward to welcoming you on ${new Date(res.date).toLocaleDateString()} at ${res.time}. Please confirm your reservation.`)
+                                    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank')
+                                  }}
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Confirmed', res.email)}>
+                                    <CheckCircle2 className="mr-2 h-4 w-4 text-primary" /> Confirmed
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Seated', res.email)}>
+                                    <UtensilsCrossed className="mr-2 h-4 w-4 text-blue-600" /> Seated
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Completed', res.email)}>
+                                    <Clock className="mr-2 h-4 w-4 text-green-600" /> Completed
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Cancelled', res.email)}>
+                                    <XCircle className="mr-2 h-4 w-4 text-red-600" /> Cancelled
+                                  </DropdownMenuItem>
+                                  {res.status === 'Completed' && !res.thankYouSent && (
+                                    <DropdownMenuItem onClick={() => handleSendThankYou(res.id, res.email, res.name)}>
+                                      <Mail className="mr-2 h-4 w-4 text-purple-600" /> Send Thank You
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
                 )}
               </TableBody>
             </Table>
