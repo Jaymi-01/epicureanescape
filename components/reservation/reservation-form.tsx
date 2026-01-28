@@ -36,7 +36,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { saveReservation } from "@/app/actions"
-import { useState } from "react"
+import { db } from "@/lib/firebase"
+import { doc, onSnapshot } from "firebase/firestore"
+import { useState, useEffect } from "react"
 import { CheckCircle2 } from "lucide-react"
 
 const formSchema = z.object({
@@ -65,6 +67,8 @@ export function ReservationForm() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [blockedDates, setBlockedDates] = useState<string[]>([])
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -73,6 +77,15 @@ export function ReservationForm() {
       requests: "",
     },
   })
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "settings", "reservations"), (doc) => {
+      if (doc.exists()) {
+        setBlockedDates(doc.data().blockedDates || [])
+      }
+    })
+    return () => unsub()
+  }, [])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
@@ -228,7 +241,8 @@ export function ReservationForm() {
                             setCalendarOpen(false)
                           }}
                           disabled={(date) =>
-                            date < getDateWithoutTime(new Date())
+                            date < getDateWithoutTime(new Date()) || 
+                            blockedDates.some(blocked => getDateWithoutTime(new Date(blocked)).getTime() === getDateWithoutTime(date).getTime())
                           }
                           initialFocus
                         />
