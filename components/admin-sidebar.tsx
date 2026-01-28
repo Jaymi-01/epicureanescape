@@ -7,6 +7,7 @@ import {
   LayoutDashboard, 
   BarChart3, 
   Utensils,
+  Settings,
   LogOut, 
   ArrowUpRight 
 } from "lucide-react"
@@ -55,6 +56,15 @@ export function AdminSidebar({ mobile = false, onNavigate }: { mobile?: boolean,
           >
             <BarChart3 size={20} />
             Analytics
+          </Button>
+        </Link>
+        <Link href="/admin/settings" onClick={onNavigate}>
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 hover:bg-white/10 hover:text-white ${pathname === "/admin/settings" ? "bg-white/10 text-white" : "text-white/60"}`}
+          >
+            <Settings size={20} />
+            Settings
           </Button>
         </Link>        <div className="pt-4 mt-4 border-t border-white/10">
           <Link href="/" target="_blank">
