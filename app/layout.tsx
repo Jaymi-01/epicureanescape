@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Montserrat, } from 'next/font/google';
 import "./globals.css";
-
+import { Toaster } from "@/components/ui/sonner"
 
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-serif' })
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });
@@ -46,6 +46,7 @@ export default function RootLayout({
         className={`${playfair.variable} ${montserrat.variable} antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );
