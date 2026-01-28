@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, increment } from "firebase/firestore"
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, increment, setDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import {
   Table,
@@ -83,6 +83,19 @@ export default function AdminDashboard() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [guests, setGuests] = useState<Guest[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  
+  // Audio Ref
+  const [lastResCount, setLastResCount] = useState(0)
+
+  const playNotification = () => {
+    try {
+      const audio = new Audio("https://cdn.freesound.org/previews/234/234524_4019029-lq.mp3") // Gentle bell sound
+      audio.volume = 0.5
+      audio.play().catch(e => console.log("Audio play failed (user interaction required first)", e))
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   // Fetch Data Real-time
   useEffect(() => {
@@ -90,6 +103,14 @@ export default function AdminDashboard() {
     const unsubscribeRes = onSnapshot(qReservations, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reservation))
       setReservations(data)
+      
+      // Play sound if count increased (new booking)
+      // We skip the very first load (count 0 -> N) to avoid noise on refresh
+      if (lastResCount > 0 && data.length > lastResCount) {
+        playNotification()
+        toast.success("New Reservation Received!")
+      }
+      setLastResCount(data.length)
     })
 
     const qSubscribers = query(collection(db, "subscribers"), orderBy("createdAt", "desc"))
@@ -121,11 +142,22 @@ export default function AdminDashboard() {
       // CRM: Increment visits if completed
       if (newStatus === 'Completed') {
         const guestRef = doc(db, "guests", guestEmail)
-        // Check if guest exists first (legacy data might not have it)
         const guestSnap = await getDoc(guestRef)
+        
         if (guestSnap.exists()) {
           await updateDoc(guestRef, {
             visits: increment(1),
+            lastVisit: new Date().toISOString()
+          })
+        } else {
+          // Create guest profile if missing (backfill)
+          // We need to fetch the reservation to get the name, but we can pass it or just use email for now
+          // Ideally we pass the name to handleStatusChange too
+          await setDoc(guestRef, {
+            email: guestEmail,
+            name: "Guest", // Fallback name, or we update handleStatusChange to accept name
+            visits: 1,
+            firstVisit: new Date().toISOString(),
             lastVisit: new Date().toISOString()
           })
         }
