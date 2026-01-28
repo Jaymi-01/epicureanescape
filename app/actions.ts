@@ -102,3 +102,24 @@ export async function sendThankYou(reservationId: string, email: string, name: s
     return { success: false, message: "Server error" }
   }
 }
+
+export async function joinWaitlist(data: {
+  name: string
+  email: string
+  phone: string
+  date: Date
+}) {
+  try {
+    await addDoc(collection(db, "waitlist"), {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      date: data.date.toISOString(),
+      createdAt: new Date().toISOString()
+    })
+    return { success: true }
+  } catch (error) {
+    console.error("Waitlist Error:", error)
+    return { success: false, message: "Failed to join waitlist." }
+  }
+}
