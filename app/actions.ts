@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore'
 import { sendMenuEmail, sendThankYouEmail } from '@/lib/email'
 
 const schema = z.object({
@@ -64,6 +64,37 @@ export async function saveReservation(data: {
       requests: data.requests || "",
       createdAt: new Date().toISOString()
     })
+
+    // CRM: Create/Update Guest Profile
+    // We use email as the ID for simplicity in looking them up
+    // In a real app, you might want a more robust deduplication strategy
+    try {
+      const guestRef = doc(db, "guests", data.email)
+      const guestSnap = await getDoc(guestRef)
+
+      if (guestSnap.exists()) {
+        // Update existing guest
+        await updateDoc(guestRef, {
+          name: data.name, // Update name in case they changed it
+          phone: data.phone,
+          lastBooked: new Date().toISOString()
+        })
+      } else {
+        // Create new guest
+        await setDoc(guestRef, {
+          email: data.email,
+          name: data.name,
+          phone: data.phone,
+          visits: 0, // Visits only increment when status is 'Completed'
+          notes: "",
+          firstVisit: new Date().toISOString(),
+          lastBooked: new Date().toISOString()
+        })
+      }
+    } catch (crmError) {
+      console.error("CRM Error (Non-fatal):", crmError)
+      // We don't fail the reservation if CRM fails
+    }
 
     // Fetch latest menu items
     const q = query(collection(db, "menu"), orderBy("category", "asc"))
