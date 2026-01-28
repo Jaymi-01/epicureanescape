@@ -1,10 +1,54 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Lock } from "lucide-react";
+"use client"
+
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Lock } from "lucide-react"
+
+interface MenuItem {
+  id: string
+  name: string
+  description: string
+  price: string
+  category: "Appetizer" | "Main" | "Dessert"
+}
 
 export default function MenuPage() {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const q = query(collection(db, "menu"), orderBy("name", "asc"))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem))
+      setMenuItems(data)
+      setLoading(false)
+    })
+    return () => unsubscribe()
+  }, [])
+
+  const appetizers = menuItems.filter(i => i.category === "Appetizer")
+  const mains = menuItems.filter(i => i.category === "Main")
+  const desserts = menuItems.filter(i => i.category === "Dessert")
+
+  const MenuList = ({ items }: { items: MenuItem[] }) => (
+    <div className="grid md:grid-cols-2 gap-8">
+      {items.map((item) => (
+        <div key={item.id} className="space-y-2">
+          <div className="flex justify-between items-baseline">
+            <h3 className="text-xl font-bold font-serif">{item.name}</h3>
+            <span className="text-lg font-serif italic text-primary">₦{item.price}</span>
+          </div>
+          <p className="text-muted-foreground text-sm font-sans">{item.description}</p>
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Navigation */}
@@ -43,36 +87,13 @@ export default function MenuPage() {
         {/* Teaser Section: Appetizers (Visible) */}
         <section className="max-w-4xl mx-auto px-6 mb-12">
           <h2 className="text-3xl font-serif text-primary mb-8 text-center border-b border-border pb-4">Nigerian Heritage Appetizers</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <div className="flex justify-between items-baseline">
-                <h3 className="text-xl font-bold font-serif">Charred Suya-Spiced Wagyu</h3>
-                <span className="text-lg font-serif italic text-primary">32</span>
-              </div>
-              <p className="text-muted-foreground text-sm font-sans">Thinly sliced Wagyu beef, traditional Yaji spice, red onion petals, micro-greens.</p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-baseline">
-                <h3 className="text-xl font-bold font-serif">Deconstructed Moin Moin</h3>
-                <span className="text-lg font-serif italic text-primary">26</span>
-              </div>
-              <p className="text-muted-foreground text-sm font-sans">Honey bean purée, steamed king prawn, quail egg, smoked bell pepper reduction.</p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-baseline">
-                <h3 className="text-xl font-bold font-serif">Crispy Snail Tempura</h3>
-                <span className="text-lg font-serif italic text-primary">34</span>
-              </div>
-              <p className="text-muted-foreground text-sm font-sans">Jumbo forest snails, light batter, spicy scotch bonnet jam, citrus zest.</p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-baseline">
-                <h3 className="text-xl font-bold font-serif">Mini Pepper Soup Consommé</h3>
-                <span className="text-lg font-serif italic text-primary">22</span>
-              </div>
-              <p className="text-muted-foreground text-sm font-sans">Clarified aromatic broth, scent leaf infusion, poached croaker fish medallions.</p>
-            </div>
-          </div>
+          {loading ? (
+            <p className="text-center py-8 text-muted-foreground">Loading heritage selections...</p>
+          ) : appetizers.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground italic underline">The chef is currently curating today's appetizers. Please check back soon.</p>
+          ) : (
+            <MenuList items={appetizers} />
+          )}
         </section>
 
         {/* Blurred Section: Main Courses & Desserts */}
@@ -87,7 +108,7 @@ export default function MenuPage() {
                 </div>
                 <CardTitle className="font-serif text-2xl">Exclusive Menu Access</CardTitle>
                 <CardDescription className="font-sans text-base pt-2">
-                  Our seasonal menu is prepared exclusively for our guests. Secure your table to view today&apos;s selections.
+                  Our full seasonal menu is prepared exclusively for our guests. Secure your table to view today's selections.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center pb-8">
@@ -103,54 +124,20 @@ export default function MenuPage() {
           {/* Blurred Content */}
           <div className="filter blur-md select-none pointer-events-none opacity-50">
              <h2 className="text-3xl font-serif text-primary mb-8 text-center border-b border-border pb-4">Main Courses</h2>
-             <div className="grid md:grid-cols-2 gap-10 mb-16">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-xl font-bold font-serif">Pan-Seared Duck Breast</h3>
-                    <span className="text-lg font-serif italic text-primary">45</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-sans">Cherry gastrique, parsnip purée, roasted root vegetables.</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-xl font-bold font-serif">Wagyu Beef Tenderloin</h3>
-                    <span className="text-lg font-serif italic text-primary">85</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-sans">Potato pavé, bordelaise sauce, bone marrow butter.</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-xl font-bold font-serif">Miso Glazed Black Cod</h3>
-                    <span className="text-lg font-serif italic text-primary">52</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-sans">Bok choy, ginger dashi, lotus root chips.</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-xl font-bold font-serif">Wild Mushroom Risotto</h3>
-                    <span className="text-lg font-serif italic text-primary">38</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-sans">Arborio rice, parmesan crisp, truffle shavings.</p>
-                </div>
-             </div>
+             {mains.length === 0 ? (
+               <div className="h-40 flex items-center justify-center italic text-muted-foreground">Premium entrées pending selection...</div>
+             ) : (
+               <div className="mb-16">
+                 <MenuList items={mains} />
+               </div>
+             )}
 
              <h2 className="text-3xl font-serif text-primary mb-8 text-center border-b border-border pb-4">Desserts</h2>
-             <div className="grid md:grid-cols-2 gap-10">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-xl font-bold font-serif">Dark Chocolate Soufflé</h3>
-                    <span className="text-lg font-serif italic text-primary">18</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-sans">Crème anglaise, fresh berries.</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-xl font-bold font-serif">Lemon Basil Tart</h3>
-                    <span className="text-lg font-serif italic text-primary">16</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-sans">Meringue kisses, basil gel, candied zest.</p>
-                </div>
-             </div>
+             {desserts.length === 0 ? (
+               <div className="h-40 flex items-center justify-center italic text-muted-foreground">Signature desserts pending selection...</div>
+             ) : (
+               <MenuList items={desserts} />
+             )}
           </div>
         </section>
       </main>
