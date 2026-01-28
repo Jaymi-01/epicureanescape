@@ -35,11 +35,21 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { saveReservation } from "@/app/actions"
+import { saveReservation, joinWaitlist } from "@/app/actions"
 import { db } from "@/lib/firebase"
 import { doc, onSnapshot } from "firebase/firestore"
 import { useState, useEffect } from "react"
 import { CheckCircle2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -68,6 +78,35 @@ export function ReservationForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [blockedDates, setBlockedDates] = useState<string[]>([])
+  
+  // Waitlist State
+  const [waitlistOpen, setWaitlistOpen] = useState(false)
+  const [wlName, setWlName] = useState("")
+  const [wlEmail, setWlEmail] = useState("")
+  const [wlPhone, setWlPhone] = useState("")
+  const [wlDate, setWlDate] = useState<Date | undefined>(undefined)
+  const [wlLoading, setWlLoading] = useState(false)
+
+  const handleJoinWaitlist = async () => {
+    if (!wlName || !wlEmail || !wlPhone || !wlDate) {
+      toast.error("Please fill in all fields")
+      return
+    }
+    setWlLoading(true)
+    const res = await joinWaitlist({ name: wlName, email: wlEmail, phone: wlPhone, date: wlDate })
+    setWlLoading(false)
+    if (res.success) {
+      toast.success("Added to waitlist!")
+      setWaitlistOpen(false)
+      // Reset form
+      setWlName("")
+      setWlEmail("")
+      setWlPhone("")
+      setWlDate(undefined)
+    } else {
+      toast.error("Failed to join waitlist")
+    }
+  }
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -261,9 +300,60 @@ export function ReservationForm() {
                       </PopoverContent>
                     </Popover>
                     <FormMessage />
+                    <button 
+                      type="button"
+                      onClick={() => setWaitlistOpen(true)}
+                      className="text-xs text-primary underline mt-2 text-left hover:text-primary/80"
+                    >
+                      Desired date fully booked? Join Waitlist.
+                    </button>
                   </FormItem>
                 )}
               />
+
+              <Dialog open={waitlistOpen} onOpenChange={setWaitlistOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Join Priority Waitlist</DialogTitle>
+                    <DialogDescription>
+                      We will notify you immediately if a table opens up for your desired date.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <FormLabel>Preferred Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !wlDate && "text-muted-foreground")}>
+                            {wlDate ? format(wlDate, "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar mode="single" selected={wlDate} onSelect={setWlDate} disabled={(date) => date < getDateWithoutTime(new Date())} initialFocus />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="grid gap-2">
+                      <FormLabel>Name</FormLabel>
+                      <Input value={wlName} onChange={(e) => setWlName(e.target.value)} placeholder="Your Name" />
+                    </div>
+                    <div className="grid gap-2">
+                      <FormLabel>Email</FormLabel>
+                      <Input value={wlEmail} onChange={(e) => setWlEmail(e.target.value)} placeholder="Email Address" />
+                    </div>
+                    <div className="grid gap-2">
+                      <FormLabel>Phone</FormLabel>
+                      <Input value={wlPhone} onChange={(e) => setWlPhone(e.target.value)} placeholder="Phone Number" />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={handleJoinWaitlist} disabled={wlLoading} className="bg-primary">
+                      {wlLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Join Waitlist"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               <FormField
                 control={form.control}
