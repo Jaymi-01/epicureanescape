@@ -2,8 +2,8 @@
 
 import { z } from 'zod'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore'
-import { sendMenuEmail } from '@/lib/email'
+import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore'
+import { sendMenuEmail, sendThankYouEmail } from '@/lib/email'
 
 const schema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -85,6 +85,19 @@ export async function saveReservation(data: {
     return { success: true }
   } catch (error) {
     console.error("Reservation Error:", error)
-    return { success: false, message: "Failed to save reservation." }
+export async function sendThankYou(reservationId: string, email: string, name: string) {
+  try {
+    const emailSent = await sendThankYouEmail(email, name)
+    
+    if (emailSent) {
+      await updateDoc(doc(db, "reservations", reservationId), {
+        thankYouSent: true
+      })
+      return { success: true }
+    }
+    return { success: false, message: "Failed to send email" }
+  } catch (error) {
+    console.error("Thank You Action Error:", error)
+    return { success: false, message: "Server error" }
   }
 }
