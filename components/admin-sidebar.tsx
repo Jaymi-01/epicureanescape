@@ -3,10 +3,11 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  BarChart3,
+  Utensils,
+  LogOut,
   ArrowUpRight 
 } from "lucide-react"
 
@@ -33,6 +34,15 @@ export function AdminSidebar({ mobile = false, onNavigate }: { mobile?: boolean,
             Overview
           </Button>
         </Link>
+        <Link href="/admin/menu" onClick={onNavigate}>
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 hover:bg-white/10 hover:text-white ${pathname === "/admin/menu" ? "bg-white/10 text-white" : "text-white/60"}`}
+          >
+            <Utensils size={20} />
+            Menu
+          </Button>
+        </Link>
         <Link href="/admin/analytics" onClick={onNavigate}>
           <Button 
             variant="ghost" 
@@ -41,8 +51,7 @@ export function AdminSidebar({ mobile = false, onNavigate }: { mobile?: boolean,
             <BarChart3 size={20} />
             Analytics
           </Button>
-        </Link>
-        <div className="pt-4 mt-4 border-t border-white/10">
+        </Link>        <div className="pt-4 mt-4 border-t border-white/10">
           <Link href="/" target="_blank">
             <Button variant="ghost" className="w-full justify-start gap-3 text-white/60 hover:text-white hover:bg-white/10">
               <ArrowUpRight size={20} />
