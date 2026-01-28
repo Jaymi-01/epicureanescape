@@ -68,10 +68,10 @@ export default function MenuManagementPage() {
   const handleOpenDialog = (item?: MenuItem) => {
     if (item) {
       setCurrentEdit(item)
-      setName(item.name)
-      setDescription(item.description)
-      setPrice(item.price)
-      setCategory(item.category)
+      setName(item.name || "")
+      setDescription(item.description || "")
+      setPrice(item.price || "")
+      setCategory(item.category || "Main")
     } else {
       setCurrentEdit(null)
       setName("")
