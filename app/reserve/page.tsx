@@ -1,6 +1,12 @@
 import { ReservationForm } from "@/components/reservation/reservation-form";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Reserve Your Table",
+  description: "Secure your exclusive dining experience at Epicurean Escape. Reservations are required for entry.",
+}
 
 export default function ReservePage() {
   return (
