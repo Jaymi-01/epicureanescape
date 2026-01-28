@@ -3,7 +3,7 @@
 import * as z from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CalendarIcon, Users, Clock, Utensils, Loader2 } from "lucide-react"
+import { CalendarIcon, Users, Clock, Utensils, Loader2, HelpCircle } from "lucide-react"
 import { format } from "date-fns"
 import Image from "next/image"
 import Link from "next/link"
@@ -45,6 +45,9 @@ const formSchema = z.object({
   }),
   email: z.string().email({
     message: "Please enter a valid email address.",
+  }),
+  phone: z.string().min(10, {
+    message: "Please enter a valid phone number.",
   }),
   date: z.date({
     message: "A date of reservation is required.",
@@ -163,6 +166,32 @@ export function ReservationForm() {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Phone Number</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
+                          <HelpCircle className="h-4 w-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 text-sm">
+                        <p>We use your number to send a one-time reservation reminder and to contact you in case of any last-minute changes to your booking.</p>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <FormControl>
+                    <Input placeholder="+234..." {...field} className="bg-white border-border focus:ring-primary" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormField

@@ -46,6 +46,7 @@ export async function subscribeToNewsletter(prevState: { message: string, succes
 export async function saveReservation(data: {
   name: string
   email: string
+  phone: string
   date: Date
   time: string
   guests: string
@@ -56,6 +57,7 @@ export async function saveReservation(data: {
     await addDoc(collection(db, "reservations"), {
       name: data.name,
       email: data.email,
+      phone: data.phone,
       date: data.date.toISOString(), // Ensure date is stored as string
       time: data.time,
       guests: data.guests,
