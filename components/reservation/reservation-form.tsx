@@ -212,7 +212,19 @@ export function ReservationForm() {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
+                            <HelpCircle className="h-4 w-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 text-sm" align="start">
+                          <p>Grayed out dates are either fully booked or the restaurant is closed for a private event.</p>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                     <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
