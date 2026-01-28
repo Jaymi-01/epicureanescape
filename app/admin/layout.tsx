@@ -6,6 +6,8 @@ import { AdminSidebar } from "@/components/admin-sidebar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
+import { onAuthStateChanged } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -13,21 +15,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    const hasToken = document.cookie.split('; ').find(row => row.startsWith('auth-token='))
-    
-    if (!hasToken) {
-      router.replace("/login")
-      return
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuth(true)
+      } else {
+        router.replace("/login")
+      }
+    })
 
-    // Only update state if we haven't already verified
-    if (!isAuth) {
-      setIsAuth(true)
-    }
-  }, [router, isAuth])
+    // Cleanup subscription
+    return () => unsubscribe()
+  }, [router])
 
   if (!isAuth) {
-    return null 
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-muted-foreground animate-pulse">Verifying access...</p>
+      </div>
+    )
   }
 
   return (
