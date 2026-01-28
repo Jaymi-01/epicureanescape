@@ -14,12 +14,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const hasToken = document.cookie.split('; ').find(row => row.startsWith('auth-token='))
+    
     if (!hasToken) {
-      router.push("/login")
-    } else {
+      router.replace("/login")
+      return
+    }
+
+    // Only update state if we haven't already verified
+    if (!isAuth) {
       setIsAuth(true)
     }
-  }, [router])
+  }, [router, isAuth])
 
   if (!isAuth) {
     return null 
