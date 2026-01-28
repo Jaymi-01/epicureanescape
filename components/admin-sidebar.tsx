@@ -3,20 +3,25 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import {
-  LayoutDashboard,
-  BarChart3,
+import { 
+  LayoutDashboard, 
+  BarChart3, 
   Utensils,
-  LogOut,
+  LogOut, 
   ArrowUpRight 
 } from "lucide-react"
-
+import { signOut } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 export function AdminSidebar({ mobile = false, onNavigate }: { mobile?: boolean, onNavigate?: () => void }) {
   const pathname = usePathname()
 
-  const handleLogout = () => {
-    document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;"
-    window.location.href = "/login"
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      // The onAuthStateChanged listener in layout will handle the redirect
+    } catch (error) {
+      console.error("Logout failed", error)
+    }
   }
 
   return (
