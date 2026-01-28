@@ -28,13 +28,16 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  UtensilsCrossed
+  UtensilsCrossed,
+  MessageSquare
 } from "lucide-react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 
 interface Reservation {
   id: string
   name: string
   email: string
+  phone?: string
   date: string
   time: string
   guests: string
@@ -225,39 +228,60 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell className="font-medium font-serif text-base">{res.name}</TableCell>
                       <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{res.date ? new Date(res.date).toLocaleDateString() : "N/A"}</span>
-                            <span className="text-xs text-muted-foreground">{res.time}</span>
-                          </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{res.date ? new Date(res.date).toLocaleDateString() : "N/A"}</span>
+                          <span className="text-xs text-muted-foreground">{res.time}</span>
+                        </div>
                       </TableCell>
                       <TableCell>{res.guests} Guests</TableCell>
-                      <TableCell className="text-muted-foreground">{res.email}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col text-sm">
+                          <span>{res.email}</span>
+                          <span className="text-muted-foreground">{res.phone}</span>
+                        </div>
+                      </TableCell>
                       <TableCell className="max-w-[200px] truncate text-sm italic text-muted-foreground">
                         {res.requests || "None"}
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
+                        <div className="flex items-center gap-2">
+                          {res.phone && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={() => {
+                                if (!res.phone) return
+                                const msg = encodeURIComponent(`Hello ${res.name}, this is Epicurean Escape. We look forward to welcoming you on ${new Date(res.date).toLocaleDateString()} at ${res.time}. Please confirm your reservation.`)
+                                window.open(`https://wa.me/${res.phone.replace(/\D/g, '')}?text=${msg}`, '_blank')
+                              }}
+                            >
+                              <MessageSquare className="h-4 w-4" />
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Confirmed')}>
-                              <CheckCircle2 className="mr-2 h-4 w-4 text-primary" /> Confirmed
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Seated')}>
-                              <UtensilsCrossed className="mr-2 h-4 w-4 text-blue-600" /> Seated
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Completed')}>
-                              <Clock className="mr-2 h-4 w-4 text-green-600" /> Completed
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Cancelled')}>
-                              <XCircle className="mr-2 h-4 w-4 text-red-600" /> Cancelled
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Confirmed')}>
+                                <CheckCircle2 className="mr-2 h-4 w-4 text-primary" /> Confirmed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Seated')}>
+                                <UtensilsCrossed className="mr-2 h-4 w-4 text-blue-600" /> Seated
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Completed')}>
+                                <Clock className="mr-2 h-4 w-4 text-green-600" /> Completed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(res.id, 'Cancelled')}>
+                                <XCircle className="mr-2 h-4 w-4 text-red-600" /> Cancelled
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
