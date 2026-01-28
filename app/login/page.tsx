@@ -23,11 +23,6 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password)
-      
-      // Set a session cookie (no expires attribute)
-      // This is deleted automatically when the browser is closed
-      document.cookie = "auth-token=true; path=/; SameSite=Strict; Secure"
-      
       router.push("/admin")
     } catch (err) {
       setError("Invalid email or password.")
