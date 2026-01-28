@@ -11,10 +11,29 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendMenuEmail(toEmail: string, guestName: string) {
+interface MenuItem {
+  name: string
+  price: string
+  description: string
+  category: string
+}
+
+export async function sendMenuEmail(toEmail: string, guestName: string, menuItems: MenuItem[] = []) {
   console.log("Attempting to send email...");
   console.log("User:", process.env.EMAIL_USER ? "Set" : "Missing");
   console.log("Pass:", process.env.EMAIL_PASS ? "Set" : "Missing");
+
+  // Group items by category
+  const mains = menuItems.filter(i => i.category === 'Main' || i.category === 'Main Course');
+  const desserts = menuItems.filter(i => i.category === 'Dessert');
+
+  // Helper to generate HTML for a list of items
+  const renderItems = (items: MenuItem[]) => items.map(item => `
+    <div style="margin-bottom: 15px;">
+      <p style="margin: 0; font-weight: bold; font-size: 18px;">${item.name} <span style="float: right; color: #741213;">₦${item.price}</span></p>
+      <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">${item.description}</p>
+    </div>
+  `).join('');
 
   const mailOptions = {
     from: `"Epicurean Escape" <${process.env.EMAIL_USER || ""}>`,
@@ -31,43 +50,17 @@ export async function sendMenuEmail(toEmail: string, guestName: string) {
         
         <p>We are delighted to confirm your reservation request. As promised, here is exclusive access to our full seasonal menu.</p>
 
+        ${mains.length > 0 ? `
         <div style="background-color: #fff; padding: 20px; border: 1px solid #e5e5e5; margin: 20px 0;">
           <h2 style="color: #741213; text-align: center; border-bottom: 1px solid #C5A059; padding-bottom: 10px;">Main Courses</h2>
-          
-          <div style="margin-bottom: 15px;">
-            <p style="margin: 0; font-weight: bold; font-size: 18px;">Pan-Seared Duck Breast <span style="float: right; color: #741213;">$45</span></p>
-            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Cherry gastrique, parsnip purée, roasted root vegetables.</p>
-          </div>
+          ${renderItems(mains)}
+        </div>` : ''}
 
-          <div style="margin-bottom: 15px;">
-            <p style="margin: 0; font-weight: bold; font-size: 18px;">Wagyu Beef Tenderloin <span style="float: right; color: #741213;">$85</span></p>
-            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Potato pavé, bordelaise sauce, bone marrow butter.</p>
-          </div>
-
-          <div style="margin-bottom: 15px;">
-            <p style="margin: 0; font-weight: bold; font-size: 18px;">Miso Glazed Black Cod <span style="float: right; color: #741213;">$52</span></p>
-            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Bok choy, ginger dashi, lotus root chips.</p>
-          </div>
-
-           <div style="margin-bottom: 15px;">
-            <p style="margin: 0; font-weight: bold; font-size: 18px;">Wild Mushroom Risotto <span style="float: right; color: #741213;">$38</span></p>
-            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Arborio rice, parmesan crisp, truffle shavings.</p>
-          </div>
-        </div>
-
+        ${desserts.length > 0 ? `
         <div style="background-color: #fff; padding: 20px; border: 1px solid #e5e5e5; margin: 20px 0;">
           <h2 style="color: #741213; text-align: center; border-bottom: 1px solid #C5A059; padding-bottom: 10px;">Desserts</h2>
-          
-          <div style="margin-bottom: 15px;">
-            <p style="margin: 0; font-weight: bold; font-size: 18px;">Dark Chocolate Soufflé <span style="float: right; color: #741213;">$18</span></p>
-            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Crème anglaise, fresh berries.</p>
-          </div>
-
-          <div style="margin-bottom: 15px;">
-            <p style="margin: 0; font-weight: bold; font-size: 18px;">Lemon Basil Tart <span style="float: right; color: #741213;">$16</span></p>
-            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Meringue kisses, basil gel, candied zest.</p>
-          </div>
-        </div>
+          ${renderItems(desserts)}
+        </div>` : ''}
 
         <p>We look forward to welcoming you.</p>
         

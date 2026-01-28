@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { db } from '@/lib/firebase'
-import { collection, addDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore'
 import { sendMenuEmail } from '@/lib/email'
 
 const schema = z.object({
@@ -63,9 +63,22 @@ export async function saveReservation(data: {
       createdAt: new Date().toISOString()
     })
 
+    // Fetch latest menu items
+    const q = query(collection(db, "menu"), orderBy("category", "asc"))
+    const menuSnapshot = await getDocs(q)
+    const menuItems = menuSnapshot.docs.map(doc => {
+      const d = doc.data()
+      return {
+        name: d.name,
+        price: d.price,
+        description: d.description,
+        category: d.category
+      }
+    })
+
     // Send the exclusive menu email
     console.log("Reservation saved. Now sending email to:", data.email)
-    await sendMenuEmail(data.email, data.name)
+    await sendMenuEmail(data.email, data.name, menuItems)
 
     return { success: true }
   } catch (error) {
