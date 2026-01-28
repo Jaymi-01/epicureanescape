@@ -32,8 +32,8 @@ import {
   MessageSquare,
   Mail
 } from "lucide-react"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 import { sendThankYou } from "@/app/actions"
+import { toast } from "sonner"
 
 interface Reservation {
   id: string
@@ -100,17 +100,32 @@ export default function AdminDashboard() {
       await updateDoc(resRef, {
         status: newStatus
       })
+      toast.success(`Status updated to ${newStatus}`)
     } catch (error) {
       console.error("Error updating status:", error)
-      alert("Failed to update status")
+      toast.error("Failed to update status")
     }
   }
 
   const handleSendThankYou = async (id: string, email: string, name: string) => {
-    if (confirm(`Send thank you email to ${name}?`)) {
-      const result = await sendThankYou(id, email, name)
-      if (!result.success) alert("Failed to send email")
-    }
+    toast.promise(
+      (async () => {
+        const result = await sendThankYou(id, email, name)
+        if (!result.success) throw new Error(result.message)
+        
+        // Update Firestore on client side (where we have auth)
+        const resRef = doc(db, "reservations", id)
+        await updateDoc(resRef, {
+          thankYouSent: true
+        })
+        return `Thank you email sent to ${name}`
+      })(),
+      {
+        loading: 'Sending email...',
+        success: (msg) => msg,
+        error: (err) => `Failed: ${err.message}`
+      }
+    )
   }
 
   // Filter Data

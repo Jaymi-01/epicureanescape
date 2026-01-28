@@ -85,14 +85,15 @@ export async function saveReservation(data: {
     return { success: true }
   } catch (error) {
     console.error("Reservation Error:", error)
+    return { success: false, message: "Failed to save reservation." }
+  }
+}
+
 export async function sendThankYou(reservationId: string, email: string, name: string) {
   try {
     const emailSent = await sendThankYouEmail(email, name)
     
     if (emailSent) {
-      await updateDoc(doc(db, "reservations", reservationId), {
-        thankYouSent: true
-      })
       return { success: true }
     }
     return { success: false, message: "Failed to send email" }
