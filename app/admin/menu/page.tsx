@@ -125,7 +125,8 @@ export default function MenuManagementPage() {
         </Button>
       </header>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* Desktop View: Table */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <Table>
           <TableHeader className="bg-gray-50/50">
             <TableRow>
@@ -173,6 +174,44 @@ export default function MenuManagementPage() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile View: Cards */}
+      <div className="md:hidden space-y-4">
+        {loading ? (
+          <p className="text-center text-muted-foreground">Loading...</p>
+        ) : menuItems.length === 0 ? (
+          <p className="text-center text-muted-foreground">No menu items found.</p>
+        ) : (
+          menuItems.map((item) => (
+            <div key={item.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-serif font-medium text-lg">{item.name}</h3>
+                  <Badge variant="outline" className={`mt-1 w-fit ${
+                      item.category === "Appetizer" ? "border-orange-200 bg-orange-50 text-orange-700" :
+                      item.category === "Main" ? "border-blue-200 bg-blue-50 text-blue-700" :
+                      "border-pink-200 bg-pink-50 text-pink-700"
+                    }`}>
+                    {item.category}
+                  </Badge>
+                </div>
+                <span className="font-bold text-primary">₦{item.price}</span>
+              </div>
+              
+              <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+              
+              <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                <Button variant="outline" size="sm" onClick={() => handleOpenDialog(item)}>
+                  <Pencil className="mr-2 h-3 w-3" /> Edit
+                </Button>
+                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(item.id)}>
+                  <Trash2 className="mr-2 h-3 w-3" /> Delete
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
