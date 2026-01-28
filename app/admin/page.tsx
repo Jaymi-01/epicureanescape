@@ -108,24 +108,19 @@ export default function AdminDashboard() {
   }
 
   const handleSendThankYou = async (id: string, email: string, name: string) => {
-    toast.promise(
-      (async () => {
-        const result = await sendThankYou(id, email, name)
-        if (!result.success) throw new Error(result.message)
-        
-        // Update Firestore on client side (where we have auth)
-        const resRef = doc(db, "reservations", id)
-        await updateDoc(resRef, {
-          thankYouSent: true
-        })
-        return `Thank you email sent to ${name}`
-      })(),
-      {
-        loading: 'Sending email...',
-        success: (msg) => msg,
-        error: (err) => `Failed: ${err.message}`
-      }
-    )
+    if (confirm(`Send thank you email to ${name}?`)) {
+      const result = await sendThankYou(id, email, name)
+      if (!result.success) alert("Failed to send email")
+    }
+  }
+
+  const formatPhoneForWhatsapp = (phone?: string) => {
+    if (!phone) return ''
+    let clean = phone.replace(/\D/g, '')
+    if (clean.length === 11 && clean.startsWith('0')) {
+      clean = '234' + clean.substring(1)
+    }
+    return clean
   }
 
   // Filter Data
@@ -277,8 +272,9 @@ export default function AdminDashboard() {
                               className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
                               onClick={() => {
                                 if (!res.phone) return
+                                const cleanPhone = formatPhoneForWhatsapp(res.phone)
                                 const msg = encodeURIComponent(`Hello ${res.name}, this is Epicurean Escape. We look forward to welcoming you on ${new Date(res.date).toLocaleDateString()} at ${res.time}. Please confirm your reservation.`)
-                                window.open(`https://wa.me/${res.phone.replace(/\D/g, '')}?text=${msg}`, '_blank')
+                                window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank')
                               }}
                             >
                               <MessageSquare className="h-4 w-4" />
