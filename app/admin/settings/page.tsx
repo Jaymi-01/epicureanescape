@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { X, CalendarOff, Save, Loader2, Download } from "lucide-react"
 import JSZip from "jszip"
+import { toast } from "sonner"
 
 export default function SettingsPage() {
   const [blockedDates, setBlockedDates] = useState<string[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
-  const [saving, setSaving] = useState(false)
+  const [isBlocking, setIsBlocking] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   // Fetch current settings
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function SettingsPage() {
     const dateStr = selectedDate.toISOString()
     if (blockedDates.includes(dateStr)) return
 
-    setSaving(true)
+    setIsBlocking(true)
     try {
       const docRef = doc(db, "settings", "reservations")
       // Create if doesn't exist, else update
@@ -41,12 +43,14 @@ export default function SettingsPage() {
     } catch (e) {
       console.error(e)
     } finally {
-      setSaving(false)
+      setIsBlocking(false)
     }
   }
 
   const handleUnblockDate = async (dateStr: string) => {
-    setSaving(true)
+    // Unblocking is instant, usually doesn't need loading state, 
+    // or we can use a local 'processing' set if needed.
+    // For now we kept original logic but removed 'saving' usage here or update it
     try {
       const docRef = doc(db, "settings", "reservations")
       await updateDoc(docRef, {
@@ -54,13 +58,11 @@ export default function SettingsPage() {
       })
     } catch (e) {
       console.error(e)
-    } finally {
-      setSaving(false)
     }
   }
 
   const handleExportData = async () => {
-    setSaving(true)
+    setIsExporting(true)
     try {
       const collections = ["reservations", "menu", "guests", "subscribers", "waitlist"]
       const zip = new JSZip()
@@ -70,14 +72,27 @@ export default function SettingsPage() {
         const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         
         if (docs.length > 0) {
-          // Generate CSV header
-          const headers = Object.keys(docs[0]).join(",")
-          // Generate CSV rows
+          // 1. Collect all unique keys from all documents to ensure we catch every field
+          const allKeys = new Set<string>()
+          docs.forEach(doc => Object.keys(doc).forEach(k => allKeys.add(k)))
+          const headers = Array.from(allKeys).sort() // Sort for consistency
+
+          // 2. Generate CSV header row
+          const headerRow = headers.map(h => `"${h}"`).join(",")
+
+          // 3. Generate rows strictly following the header order
           const rows = docs.map(doc => 
-            Object.values(doc).map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")
+            headers.map(key => {
+              // Access property safely, default to empty string
+              // @ts-ignore
+              const val = doc[key]
+              const stringVal = String(val === null || val === undefined ? '' : val)
+              // Escape double quotes inside values
+              return `"${stringVal.replace(/"/g, '""')}"`
+            }).join(",")
           ).join("\n")
           
-          zip.file(`${colName}.csv`, `${headers}\n${rows}`)
+          zip.file(`${colName}.csv`, `\uFEFF${headerRow}\n${rows}`)
         }
       }
 
@@ -95,7 +110,7 @@ export default function SettingsPage() {
       console.error("Export failed:", e)
       toast.error("Failed to export data")
     } finally {
-      setSaving(false)
+      setIsExporting(false)
     }
   }
 
@@ -127,10 +142,10 @@ export default function SettingsPage() {
             </div>
             <Button 
               onClick={handleBlockDate} 
-              disabled={!selectedDate || saving}
+              disabled={!selectedDate || isBlocking}
               className="w-full bg-primary hover:bg-primary/90"
             >
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {isBlocking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               Block Selected Date
             </Button>
           </CardContent>
@@ -170,8 +185,8 @@ export default function SettingsPage() {
             <CardDescription>Download a backup of your entire database.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={handleExportData} disabled={saving} variant="outline" className="gap-2">
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            <Button onClick={handleExportData} disabled={isExporting} variant="outline" className="gap-2">
+              {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               Export All Data (CSV ZIP)
             </Button>
           </CardContent>
