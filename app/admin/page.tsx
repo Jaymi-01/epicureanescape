@@ -32,7 +32,8 @@ import {
   MessageSquare,
   Mail,
   Crown,
-  Star
+  Star,
+  Printer
 } from "lucide-react"
 import { sendThankYou } from "@/app/actions"
 import { toast } from "sonner"
@@ -205,6 +206,62 @@ export default function AdminDashboard() {
     return clean
   }
 
+  const handlePrintBriefing = () => {
+    const today = new Date().toLocaleDateString()
+    const todaysBookings = reservations.filter(r => new Date(r.date).toLocaleDateString() === today).sort((a, b) => a.time.localeCompare(b.time))
+
+    const printWindow = window.open('', '', 'width=800,height=600')
+    if (!printWindow) return
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Daily Briefing - ${today}</title>
+          <style>
+            body { font-family: monospace; padding: 20px; }
+            h1 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+            th { background-color: #f0f0f0; }
+            .notes { font-style: italic; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>Epicurean Escape - Service Briefing</h1>
+          <p><strong>Date:</strong> ${today}</p>
+          <p><strong>Total Guests:</strong> ${todaysBookings.reduce((acc, curr) => acc + parseInt(curr.guests), 0)}</p>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Guest Name</th>
+                <th>Pax</th>
+                <th>Contact</th>
+                <th>Notes / Requests</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${todaysBookings.map(r => `
+                <tr>
+                  <td>${r.time}</td>
+                  <td>${r.name}</td>
+                  <td>${r.guests}</td>
+                  <td>${r.phone || '-'}</td>
+                  <td class="notes">${r.requests || ''}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <script>
+            window.onload = () => { window.print(); window.close(); }
+          </script>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
+
   // Filter Data
   const filteredReservations = reservations.filter(res => 
     res.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -316,6 +373,15 @@ export default function AdminDashboard() {
                 className="text-xs"
               >
                 History
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handlePrintBriefing}
+                className="text-xs gap-2 ml-2 border-dashed"
+              >
+                <Printer size={12} />
+                Print Briefing
               </Button>
             </div>
           )}
