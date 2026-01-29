@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import { onAuthStateChanged } from "firebase/auth"
 import { auth } from "@/lib/firebase"
+import { OnboardingTour } from "@/components/onboarding-tour"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -23,7 +24,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     })
 
-    // Cleanup subscription
     return () => unsubscribe()
   }, [router])
 
@@ -37,14 +37,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
-      {/* Desktop Sidebar */}
       <aside className="w-64 hidden md:block fixed h-full z-10 border-r border-border/10 bg-foreground text-background">
         <AdminSidebar />
       </aside>
 
-      {/* Main Content Wrapper */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen w-full">
-        {/* Mobile Header */}
         <div className="md:hidden bg-foreground text-background p-4 flex items-center justify-between sticky top-0 z-20">
           <span className="font-serif tracking-wider">TIARA ADMIN</span>
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -59,10 +56,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Sheet>
         </div>
 
-        {/* Page Content */}
         <main className="flex-1 p-4 md:p-8 w-full max-w-7xl mx-auto">
           {children}
         </main>
+        <OnboardingTour />
       </div>
     </div>
   )

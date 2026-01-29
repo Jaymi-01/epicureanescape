@@ -7,11 +7,12 @@ import {
   LayoutDashboard,
   BarChart3,
   Utensils,
-  Settings,
-  LogOut,
-  ArrowUpRight,
-  Clock
-} from "lucide-react"
+    Settings,
+    LogOut, 
+    ArrowUpRight,
+    Clock,
+    HelpCircle
+  } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 export function AdminSidebar({ mobile = false, onNavigate }: { mobile?: boolean, onNavigate?: () => void }) {
@@ -75,6 +76,15 @@ export function AdminSidebar({ mobile = false, onNavigate }: { mobile?: boolean,
           >
             <Clock size={20} />
             Waitlist
+          </Button>
+        </Link>
+        <Link href="/admin/help" onClick={onNavigate}>
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 hover:bg-white/10 hover:text-white ${pathname === "/admin/help" ? "bg-white/10 text-white" : "text-white/60"}`}
+          >
+            <HelpCircle size={20} />
+            Help Guide
           </Button>
         </Link>        <div className="pt-4 mt-4 border-t border-white/10">
           <Link href="/" target="_blank">
