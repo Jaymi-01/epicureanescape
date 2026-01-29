@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, increment, setDoc } from "firebase/firestore"
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, increment, setDoc, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import {
   Table,
@@ -79,6 +79,7 @@ const StatusBadge = ({ status }: { status?: string }) => {
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("reservations")
+  const [viewMode, setViewMode] = useState<"upcoming" | "all">("upcoming")
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [guests, setGuests] = useState<Guest[]>([])
@@ -99,13 +100,31 @@ export default function AdminDashboard() {
 
   // Fetch Data Real-time
   useEffect(() => {
-    const qReservations = query(collection(db, "reservations"), orderBy("createdAt", "desc"))
+    let qReservations = query(collection(db, "reservations"), orderBy("createdAt", "desc"))
+    
+    if (viewMode === 'upcoming') {
+      // Create ISO string for today at 00:00:00 to show today's bookings + future
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      qReservations = query(
+        collection(db, "reservations"), 
+        where("date", ">=", today.toISOString()),
+        orderBy("date", "asc")
+      )
+    } else {
+      // History: Completed or Cancelled
+      qReservations = query(
+        collection(db, "reservations"), 
+        where("status", "in", ["Completed", "Cancelled"]),
+        orderBy("createdAt", "desc")
+      )
+    }
+
     const unsubscribeRes = onSnapshot(qReservations, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reservation))
       setReservations(data)
       
       // Play sound if count increased (new booking)
-      // We skip the very first load (count 0 -> N) to avoid noise on refresh
       if (lastResCount > 0 && data.length > lastResCount) {
         playNotification()
         toast.success("New Reservation Received!")
@@ -130,7 +149,7 @@ export default function AdminDashboard() {
       unsubscribeSub()
       unsubscribeGuests()
     }
-  }, [])
+  }, [viewMode])
 
   const handleStatusChange = async (id: string, newStatus: string, guestEmail: string) => {
     try {
@@ -279,7 +298,27 @@ export default function AdminDashboard() {
               Subscribers
             </Button>
           </div>
-          <Badge variant="outline" className="uppercase tracking-widest text-xs py-1 self-start md:self-center">Live Data</Badge>
+          
+          {activeTab === "reservations" && (
+            <div className="flex gap-2">
+              <Button 
+                variant={viewMode === "upcoming" ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode("upcoming")}
+                className="text-xs"
+              >
+                Upcoming
+              </Button>
+              <Button 
+                variant={viewMode === "all" ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode("all")}
+                className="text-xs"
+              >
+                History
+              </Button>
+            </div>
+          )}
         </div>
         
         <div className="p-0 overflow-x-auto">
