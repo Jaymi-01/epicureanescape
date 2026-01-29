@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore"
+import { doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
-import { X, CalendarOff, Save, Loader2 } from "lucide-react"
+import { X, CalendarOff, Save, Loader2, Download } from "lucide-react"
+import JSZip from "jszip"
 
 export default function SettingsPage() {
   const [blockedDates, setBlockedDates] = useState<string[]>([])
@@ -53,6 +54,46 @@ export default function SettingsPage() {
       })
     } catch (e) {
       console.error(e)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleExportData = async () => {
+    setSaving(true)
+    try {
+      const collections = ["reservations", "menu", "guests", "subscribers", "waitlist"]
+      const zip = new JSZip()
+
+      for (const colName of collections) {
+        const snap = await getDocs(collection(db, colName))
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        
+        if (docs.length > 0) {
+          // Generate CSV header
+          const headers = Object.keys(docs[0]).join(",")
+          // Generate CSV rows
+          const rows = docs.map(doc => 
+            Object.values(doc).map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")
+          ).join("\n")
+          
+          zip.file(`${colName}.csv`, `${headers}\n${rows}`)
+        }
+      }
+
+      const content = await zip.generateAsync({ type: "blob" })
+      const url = URL.createObjectURL(content)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `epicurean-backup-${new Date().toISOString().split('T')[0]}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success("Backup downloaded successfully")
+    } catch (e) {
+      console.error("Export failed:", e)
+      toast.error("Failed to export data")
     } finally {
       setSaving(false)
     }
@@ -119,6 +160,20 @@ export default function SettingsPage() {
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Data Management */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Data Management</CardTitle>
+            <CardDescription>Download a backup of your entire database.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleExportData} disabled={saving} variant="outline" className="gap-2">
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Export All Data (CSV ZIP)
+            </Button>
           </CardContent>
         </Card>
       </div>
