@@ -34,6 +34,7 @@ export default function HelpPage() {
                   <li><strong>History:</strong> Shows past completed or cancelled bookings.</li>
                   <li><strong>Status Actions:</strong> Click the <Badge variant="outline" className="mx-1">...</Badge> button to mark a guest as <em>Seated</em>, <em>Completed</em>, or <em>Cancelled</em>.</li>
                   <li><strong>WhatsApp Reminder:</strong> Click the green chat icon to instantly open a pre-filled WhatsApp message to the guest.</li>
+                  <li><strong>Daily Briefing:</strong> Click <strong>Print Briefing</strong> to generate a printer-friendly sheet of today&apos;s bookings for your kitchen and floor staff.</li>
                 </ul>
               </AccordionContent>
             </AccordionItem>
