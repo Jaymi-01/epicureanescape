@@ -173,7 +173,19 @@ export default function SettingsPage() {
               </div>
               <Switch 
                 checked={isAlertVisible}
-                onCheckedChange={setIsAlertVisible}
+                onCheckedChange={async (val) => {
+                  setIsAlertVisible(val)
+                  // Auto-save toggle
+                  try {
+                    await setDoc(doc(db, "settings", "global"), {
+                      isAlertVisible: val,
+                      alertMessage
+                    }, { merge: true })
+                    toast.success(val ? "Banner enabled" : "Banner disabled")
+                  } catch (e) {
+                    toast.error("Failed to update status")
+                  }
+                }}
               />
             </div>
             
@@ -187,7 +199,7 @@ export default function SettingsPage() {
                   className="bg-white"
                 />
                 <Button onClick={handleSaveAlert} disabled={isSavingAlert} className="bg-primary hover:bg-primary/90">
-                  {isSavingAlert ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update"}
+                  {isSavingAlert ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Text"}
                 </Button>
               </div>
             </div>
