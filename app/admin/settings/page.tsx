@@ -7,8 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
-import { X, CalendarOff, Save, Loader2, Download } from "lucide-react"
+import { X, CalendarOff, Save, Loader2, Download, AlertTriangle } from "lucide-react"
 import JSZip from "jszip"
 import { toast } from "sonner"
 
@@ -17,15 +20,32 @@ export default function SettingsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isBlocking, setIsBlocking] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  
+  // Alert State
+  const [isAlertVisible, setIsAlertVisible] = useState(false)
+  const [alertMessage, setAlertMessage] = useState("")
+  const [isSavingAlert, setIsSavingAlert] = useState(false)
 
   // Fetch current settings
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, "settings", "reservations"), (doc) => {
+    const unsubDates = onSnapshot(doc(db, "settings", "reservations"), (doc) => {
       if (doc.exists()) {
         setBlockedDates(doc.data().blockedDates || [])
       }
     })
-    return () => unsub()
+
+    const unsubAlert = onSnapshot(doc(db, "settings", "global"), (doc) => {
+      if (doc.exists()) {
+        const data = doc.data()
+        setIsAlertVisible(data.isAlertVisible || false)
+        setAlertMessage(data.alertMessage || "")
+      }
+    })
+
+    return () => {
+      unsubDates()
+      unsubAlert()
+    }
   }, [])
 
   const handleBlockDate = async () => {
@@ -48,9 +68,6 @@ export default function SettingsPage() {
   }
 
   const handleUnblockDate = async (dateStr: string) => {
-    // Unblocking is instant, usually doesn't need loading state, 
-    // or we can use a local 'processing' set if needed.
-    // For now we kept original logic but removed 'saving' usage here or update it
     try {
       const docRef = doc(db, "settings", "reservations")
       await updateDoc(docRef, {
@@ -58,6 +75,22 @@ export default function SettingsPage() {
       })
     } catch (e) {
       console.error(e)
+    }
+  }
+
+  const handleSaveAlert = async () => {
+    setIsSavingAlert(true)
+    try {
+      await setDoc(doc(db, "settings", "global"), {
+        isAlertVisible,
+        alertMessage
+      }, { merge: true })
+      toast.success("Global alert updated")
+    } catch (e) {
+      console.error(e)
+      toast.error("Failed to update alert")
+    } finally {
+      setIsSavingAlert(false)
     }
   }
 
@@ -122,6 +155,45 @@ export default function SettingsPage() {
       </header>
 
       <div className="grid md:grid-cols-2 gap-8">
+        
+        {/* Global Alert */}
+        <Card className="md:col-span-2 border-primary/20 bg-primary/5">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="text-primary h-5 w-5" />
+              <CardTitle>Site Alerts & Service Status</CardTitle>
+            </div>
+            <CardDescription>Display a prominent banner across the entire website.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between border-b border-primary/10 pb-4">
+              <div className="space-y-0.5">
+                <Label className="text-base">Enable Global Banner</Label>
+                <p className="text-sm text-muted-foreground">Show the message below at the top of every page.</p>
+              </div>
+              <Switch 
+                checked={isAlertVisible}
+                onCheckedChange={setIsAlertVisible}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Alert Message</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={alertMessage}
+                  onChange={(e) => setAlertMessage(e.target.value)}
+                  placeholder="e.g. We are closed today for a private event."
+                  className="bg-white"
+                />
+                <Button onClick={handleSaveAlert} disabled={isSavingAlert} className="bg-primary hover:bg-primary/90">
+                  {isSavingAlert ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Date Blocker */}
         <Card>
           <CardHeader>
