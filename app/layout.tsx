@@ -8,6 +8,7 @@ const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-serif'
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://epicureanescape.com"),
   title: {
     default: "Epicurean Escape by Tiara | Exclusive Fine Dining",
     template: "%s | Epicurean Escape by Tiara"
