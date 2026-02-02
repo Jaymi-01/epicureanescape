@@ -128,16 +128,26 @@ export function ReservationForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
-    const result = await saveReservation(values)
-    setIsLoading(false)
-    if (result.success) {
-      setIsSubmitted(true)
-    } else {
-      alert("Something went wrong. Please try again.")
+    try {
+      const result = await saveReservation(values)
+      
+      if (result.success && result.paymentUrl) {
+        // Redirect to Paystack
+        window.location.href = result.paymentUrl
+      } else {
+        setIsLoading(false)
+        toast.error(result.message || "Something went wrong. Please try again.")
+      }
+    } catch (error) {
+      console.error(error)
+      setIsLoading(false)
+      toast.error("An error occurred. Please try again.")
     }
   }
 
   if (isSubmitted) {
+    // Note: This state might not be reached if we redirect, 
+    // but useful if we handle success via return params later.
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -406,6 +416,19 @@ export function ReservationForm() {
               />
             </div>
 
+            {/* Payment Explanation Section */}
+            {form.watch("guests") && (
+              <div className="bg-secondary/10 border border-secondary p-4 rounded-lg space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Reservation Fee (₦5,000 × {form.watch("guests")})</span>
+                  <span className="font-semibold">₦{(parseInt(form.watch("guests")) * 5000).toLocaleString()}</span>
+                </div>
+                <div className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                  <p>To secure your reservation, a non-refundable deposit of ₦5,000 per guest is required. This amount will be deducted from your final bill.</p>
+                </div>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="requests"
@@ -431,7 +454,9 @@ export function ReservationForm() {
                   Processing...
                 </>
               ) : (
-                "Complete Reservation"
+                form.watch("guests") 
+                  ? `Proceed to Payment (₦${(parseInt(form.watch("guests")) * 5000).toLocaleString()})`
+                  : "Complete Reservation"
               )}
             </Button>
           </form>
