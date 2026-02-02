@@ -1,8 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { db } from '@/lib/firebase'
-import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc, setDoc, getDoc, where } from 'firebase/firestore'
+import { adminDb } from '@/lib/firebase-admin'
 import { sendMenuEmail, sendThankYouEmail } from '@/lib/email'
 import { initializePayment, verifyTransaction } from '@/lib/paystack'
 
@@ -26,7 +25,7 @@ export async function subscribeToNewsletter(prevState: { message: string, succes
 
   try {
     // Save to Firebase Firestore 'subscribers' collection
-    await addDoc(collection(db, "subscribers"), {
+    await adminDb.collection("subscribers").add({
       email: validatedFields.data.email,
       createdAt: new Date().toISOString()
     })
@@ -59,7 +58,7 @@ export async function saveReservation(data: {
     const reference = `RES-${Date.now()}-${Math.random().toString(36).substring(7)}`
 
     // Save to Firebase Firestore 'reservations' collection with 'pending_payment' status
-    await addDoc(collection(db, "reservations"), {
+    await adminDb.collection("reservations").add({
       name: data.name,
       email: data.email,
       phone: data.phone,
@@ -75,17 +74,17 @@ export async function saveReservation(data: {
 
     // CRM: Create/Update Guest Profile (Keep this for record keeping, even if pending)
     try {
-      const guestRef = doc(db, "guests", data.email)
-      const guestSnap = await getDoc(guestRef)
+      const guestRef = adminDb.collection("guests").doc(data.email)
+      const guestSnap = await guestRef.get()
 
-      if (guestSnap.exists()) {
-        await updateDoc(guestRef, {
+      if (guestSnap.exists) {
+        await guestRef.update({
           name: data.name,
           phone: data.phone,
           lastBooked: new Date().toISOString()
         })
       } else {
-        await setDoc(guestRef, {
+        await guestRef.set({
           email: data.email,
           name: data.name,
           phone: data.phone,
@@ -134,8 +133,9 @@ export async function verifyPaymentAndConfirmReservation(reference: string) {
     }
 
     // 2. Find the reservation in Firestore
-    const q = query(collection(db, "reservations"), where("paymentReference", "==", reference))
-    const querySnapshot = await getDocs(q)
+    const querySnapshot = await adminDb.collection("reservations")
+      .where("paymentReference", "==", reference)
+      .get()
 
     if (querySnapshot.empty) {
       console.error(`No reservation found for reference: ${reference}`)
@@ -152,7 +152,7 @@ export async function verifyPaymentAndConfirmReservation(reference: string) {
       return { success: true, alreadyConfirmed: true }
     }
 
-    await updateDoc(doc(db, "reservations", reservationDoc.id), {
+    await adminDb.collection("reservations").doc(reservationDoc.id).update({
       status: "confirmed",
       paymentId: paymentData.id,
       paidAt: new Date().toISOString()
@@ -160,8 +160,7 @@ export async function verifyPaymentAndConfirmReservation(reference: string) {
 
     // 4. Send Confirmation Email
     try {
-      const menuQ = query(collection(db, "menu"), orderBy("category", "asc"))
-      const menuSnapshot = await getDocs(menuQ)
+      const menuSnapshot = await adminDb.collection("menu").orderBy("category", "asc").get()
       const menuItems = menuSnapshot.docs.map(doc => {
         const d = doc.data()
         return {
@@ -207,7 +206,7 @@ export async function joinWaitlist(data: {
   date: Date
 }) {
   try {
-    await addDoc(collection(db, "waitlist"), {
+    await adminDb.collection("waitlist").add({
       name: data.name,
       email: data.email,
       phone: data.phone,
