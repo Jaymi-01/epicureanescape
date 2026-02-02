@@ -2,8 +2,9 @@
 
 import { z } from 'zod'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc, setDoc, getDoc, where } from 'firebase/firestore'
 import { sendMenuEmail, sendThankYouEmail } from '@/lib/email'
+import { initializePayment, verifyTransaction } from '@/lib/paystack'
 
 const schema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -53,39 +54,42 @@ export async function saveReservation(data: {
   requests?: string
 }) {
   try {
-    // Save to Firebase Firestore 'reservations' collection
+    const amountPerGuest = 5000
+    const totalAmount = parseInt(data.guests) * amountPerGuest
+    const reference = `RES-${Date.now()}-${Math.random().toString(36).substring(7)}`
+
+    // Save to Firebase Firestore 'reservations' collection with 'pending_payment' status
     await addDoc(collection(db, "reservations"), {
       name: data.name,
       email: data.email,
       phone: data.phone,
-      date: data.date.toISOString(), // Ensure date is stored as string
+      date: data.date.toISOString(),
       time: data.time,
       guests: data.guests,
       requests: data.requests || "",
+      status: "pending_payment", // New status field
+      totalAmount,
+      paymentReference: reference,
       createdAt: new Date().toISOString()
     })
 
-    // CRM: Create/Update Guest Profile
-    // We use email as the ID for simplicity in looking them up
-    // In a real app, you might want a more robust deduplication strategy
+    // CRM: Create/Update Guest Profile (Keep this for record keeping, even if pending)
     try {
       const guestRef = doc(db, "guests", data.email)
       const guestSnap = await getDoc(guestRef)
 
       if (guestSnap.exists()) {
-        // Update existing guest
         await updateDoc(guestRef, {
-          name: data.name, // Update name in case they changed it
+          name: data.name,
           phone: data.phone,
           lastBooked: new Date().toISOString()
         })
       } else {
-        // Create new guest
         await setDoc(guestRef, {
           email: data.email,
           name: data.name,
           phone: data.phone,
-          visits: 0, // Visits only increment when status is 'Completed'
+          visits: 0,
           notes: "",
           firstVisit: new Date().toISOString(),
           lastBooked: new Date().toISOString()
@@ -93,30 +97,92 @@ export async function saveReservation(data: {
       }
     } catch (crmError) {
       console.error("CRM Error (Non-fatal):", crmError)
-      // We don't fail the reservation if CRM fails
     }
 
-    // Fetch latest menu items
-    const q = query(collection(db, "menu"), orderBy("category", "asc"))
-    const menuSnapshot = await getDocs(q)
-    const menuItems = menuSnapshot.docs.map(doc => {
-      const d = doc.data()
-      return {
-        name: d.name,
-        price: d.price,
-        description: d.description,
-        category: d.category
-      }
-    })
+    // Initialize Paystack Payment
+    try {
+      const paymentUrl = await initializePayment(data.email, totalAmount, reference)
+      return { success: true, paymentUrl }
+    } catch (paymentError) {
+      console.error("Payment Init Error:", paymentError)
+      return { success: false, message: "Reservation saved, but payment failed to initialize. Please contact support." }
+    }
 
-    // Send the exclusive menu email
-    console.log("Reservation saved. Now sending email to:", data.email)
-    await sendMenuEmail(data.email, data.name, menuItems)
-
-    return { success: true }
   } catch (error) {
     console.error("Reservation Error:", error)
     return { success: false, message: "Failed to save reservation." }
+  }
+}
+
+export async function verifyPaymentAndConfirmReservation(reference: string) {
+  try {
+    console.log(`Verifying payment for reference: ${reference}`)
+
+    // 1. Verify with Paystack
+    let paymentData
+    try {
+      paymentData = await verifyTransaction(reference)
+      console.log("Paystack verification status:", paymentData.status)
+    } catch (err: any) {
+      console.error("Paystack API call failed:", err)
+      return { success: false, message: `Paystack connection failed: ${err.message}` }
+    }
+
+    if (paymentData.status !== 'success') {
+      console.error("Payment status is not success:", paymentData.status)
+      return { success: false, message: `Payment was not successful. Status: ${paymentData.status}` }
+    }
+
+    // 2. Find the reservation in Firestore
+    const q = query(collection(db, "reservations"), where("paymentReference", "==", reference))
+    const querySnapshot = await getDocs(q)
+
+    if (querySnapshot.empty) {
+      console.error(`No reservation found for reference: ${reference}`)
+      return { success: false, message: `Reservation not found for reference: ${reference}` }
+    }
+
+    const reservationDoc = querySnapshot.docs[0]
+    const reservationData = reservationDoc.data()
+
+    // 3. Update status to 'confirmed'
+    // Check if already confirmed to avoid double emails
+    if (reservationData.status === 'confirmed') {
+      console.log("Reservation already confirmed.")
+      return { success: true, alreadyConfirmed: true }
+    }
+
+    await updateDoc(doc(db, "reservations", reservationDoc.id), {
+      status: "confirmed",
+      paymentId: paymentData.id,
+      paidAt: new Date().toISOString()
+    })
+
+    // 4. Send Confirmation Email
+    try {
+      const menuQ = query(collection(db, "menu"), orderBy("category", "asc"))
+      const menuSnapshot = await getDocs(menuQ)
+      const menuItems = menuSnapshot.docs.map(doc => {
+        const d = doc.data()
+        return {
+          name: d.name,
+          price: d.price,
+          description: d.description,
+          category: d.category
+        }
+      })
+
+      await sendMenuEmail(reservationData.email, reservationData.name, menuItems)
+    } catch (emailError) {
+      console.error("Failed to send email after payment:", emailError)
+      // Don't fail the whole process if email fails, but log it
+    }
+
+    return { success: true }
+
+  } catch (error: any) {
+    console.error("Verification Critical Error:", error)
+    return { success: false, message: `Server error: ${error.message}` }
   }
 }
 
